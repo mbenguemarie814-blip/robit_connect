@@ -50,7 +50,7 @@ function Splash() {
 
           <div className="flex-[0.6]" />
 
-          <div className="flex w-full justify-center" style={{ marginBottom: "90px" }}>
+          <div className="flex w-full justify-center" style={{ marginBottom: "60px" }}>
             <Link
               to="/accueil"
               className="flex w-[80%] items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-5 font-display text-base font-semibold text-primary-foreground shadow-glow transition-transform active:scale-[0.98]"
