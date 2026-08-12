@@ -87,8 +87,8 @@ function Scanner() {
         (res) => {
           const extractedId = extractDeviceId(res.data);
           if (!extractedId) {
-            setDebug(`⛔ Rejeté — contenu scanné : ${res.data}`);
-            setError(`Accès non autorisé. Contenu détecté : ${res.data}`);
+            setDebug("⛔ Accès non autorisé");
+            setError("Accès non autorisé.");
             return;
           }
           setError(null);
