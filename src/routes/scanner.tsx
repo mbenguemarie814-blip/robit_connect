@@ -44,8 +44,15 @@ function Scanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<import("qr-scanner").default | null>(null);
 
-  const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [installedAt, setInstalledAt] = useState<string>("");
+  const getIdFromUrl = () => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    return id && id.trim() ? id.trim() : null;
+  };
+
+  const [deviceId, setDeviceId] = useState<string | null>(() => getIdFromUrl());
+  const [installedAt, setInstalledAt] = useState<string>(() => (getIdFromUrl() ? new Date().toISOString() : ""));
   const [gps, setGps] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
