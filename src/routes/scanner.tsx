@@ -87,8 +87,8 @@ function Scanner() {
         (res) => {
           const extractedId = extractDeviceId(res.data);
           if (!extractedId) {
-            setDebug("⛔ Accès non autorisé — ce QR code n'est pas un module ERT Connect");
-            setError("Accès non autorisé : ce QR code n'appartient pas à ERT Connect.");
+            setDebug(`⛔ Rejeté — contenu scanné : ${res.data}`);
+            setError(`Accès non autorisé. Contenu détecté : ${res.data}`);
             return;
           }
           setError(null);
