@@ -242,7 +242,7 @@ function Scanner() {
                 </div>
               )}
             </div>
-            <p className="text-[11px]" style={{ color: "rgba(251,191,36,0.7)" }}>Statut : {debug}</p>
+            <p className="rounded-xl px-3 py-2 text-center text-sm font-semibold" style={{ background: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.4)" }}>{debug}</p>
           </>
         )}
 
