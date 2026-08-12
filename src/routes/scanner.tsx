@@ -25,6 +25,20 @@ const fieldStyle: React.CSSProperties = {
   color: "#fff",
 };
 
+const ALLOWED_SCANNER_URL = "https://robit-connect.vercel.app/scanner";
+
+function extractDeviceId(raw: string): string | null {
+  try {
+    const url = new URL(raw);
+    const base = new URL(ALLOWED_SCANNER_URL);
+    if (url.origin !== base.origin || url.pathname !== base.pathname) return null;
+    const id = url.searchParams.get("id");
+    return id && id.trim() ? id.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 function Scanner() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -64,7 +78,12 @@ function Scanner() {
       const scanner = new QrScannerLib(
         videoRef.current,
         (res) => {
-          setDeviceId(res.data);
+          const extractedId = extractDeviceId(res.data);
+          if (!extractedId) {
+            setDebug("QR code non reconnu — scanne un QR code officiel ERT Connect");
+            return;
+          }
+          setDeviceId(extractedId);
           setInstalledAt(new Date().toISOString());
           setDebug("Code détecté ✓");
           scanner.stop();
