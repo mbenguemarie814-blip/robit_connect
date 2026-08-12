@@ -85,15 +85,17 @@ function Scanner() {
       const scanner = new QrScannerLib(
         videoRef.current,
         (res) => {
-          const raw = res.data.trim();
-          const isUrl = /^https?:\/\//i.test(raw);
-          if (!isUrl) {
-            setDebug("QR code non reconnu — scanne un QR code officiel ERT Connect");
+          const extractedId = extractDeviceId(res.data);
+          if (!extractedId) {
+            setDebug("⛔ Accès non autorisé — ce QR code n'est pas un module ERT Connect");
+            setError("Accès non autorisé : ce QR code n'appartient pas à ERT Connect.");
             return;
           }
-          setDebug("Lien détecté — redirection...");
+          setError(null);
+          setDeviceId(extractedId);
+          setInstalledAt(new Date().toISOString());
+          setDebug("Code détecté ✓");
           scanner.stop();
-          window.location.href = raw;
         },
         {
           preferredCamera: "environment",
