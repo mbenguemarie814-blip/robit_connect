@@ -197,7 +197,7 @@ function Accueil() {
 
           {/* Action centrale */}
           <section className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-            <SideAction icon={<Activity className="h-5 w-5" />} label="Temps réel" />
+            <SideAction icon={<Activity className="h-5 w-5" />} label="Etat lampes" to="/poteaux" />
             <Link
               to="/scanner"
               className="grid h-20 w-20 place-items-center rounded-full text-center transition-transform active:scale-95"
@@ -298,23 +298,35 @@ function Stat({ value, unit, label }: { value: string; unit: string; label: stri
   );
 }
 
-function SideAction({ icon, label }: { icon: ReactNode; label: string }) {
-  return (
-    <button
-      type="button"
-      className="relative flex h-16 flex-col items-center justify-center gap-1 overflow-hidden rounded-3xl px-2 text-center transition-transform active:scale-95"
-      style={{
-        background: "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.05) 100%)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14)",
-      }}
-    >
+function SideAction({ icon, label, to }: { icon: ReactNode; label: string; to?: string }) {
+  const className = "relative flex h-16 flex-col items-center justify-center gap-1 overflow-hidden rounded-3xl px-2 text-center transition-transform active:scale-95";
+  const style = {
+    background: "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.05) 100%)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14)",
+  };
+  const inner = (
+    <>
       <div className="pointer-events-none absolute inset-0" style={{
         background: "linear-gradient(115deg, rgba(255,255,255,0.12) 0%, transparent 30%, transparent 100%)",
       }} />
       <span className="relative" style={{ color: "#FBBF24" }}>{icon}</span>
       <span className="relative text-[11px] font-semibold text-white">{label}</span>
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className={className} style={style}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" className={className} style={style}>
+      {inner}
     </button>
   );
 }
