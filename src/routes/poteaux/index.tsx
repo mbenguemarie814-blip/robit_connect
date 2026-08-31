@@ -32,23 +32,38 @@ const CATEGORIES = [
   { value: "hors_ligne", label: "Hors ligne" },
 ];
 
-const ETAT_STYLE: Record<string, { color: string; glow: string; label: string }> = {
-  ALLUME: { color: "#4ADE80", glow: "rgba(74,222,128,0.45)", label: "Allume" },
-  JOUR_NORMAL: { color: "#9CA3AF", glow: "rgba(156,163,175,0.35)", label: "Eteint (normal)" },
-  PANNE_ALIMENTATION: { color: "#F87171", glow: "rgba(248,113,113,0.45)", label: "Panne alimentation" },
-  SOUS_TENSION: { color: "#F87171", glow: "rgba(248,113,113,0.45)", label: "Sous-tension" },
-  SURTENSION: { color: "#F87171", glow: "rgba(248,113,113,0.45)", label: "Surtension" },
-  LAMPE_POTENTIELLEMENT_GRILLEE: { color: "#F87171", glow: "rgba(248,113,113,0.45)", label: "Lampe grillee" },
-  SURCONSOMMATION: { color: "#FBBF24", glow: "rgba(251,191,36,0.45)", label: "Surconsommation" },
-  ETEINT_NUIT: { color: "#FBBF24", glow: "rgba(251,191,36,0.45)", label: "Eteinte la nuit" },
-  ALLUME_DE_JOUR: { color: "#FBBF24", glow: "rgba(251,191,36,0.45)", label: "Allumee le jour" },
-  DEFAUT_INTERMITTENT: { color: "#FBBF24", glow: "rgba(251,191,36,0.45)", label: "Defaut intermittent" },
-  DEGRADATION: { color: "#FBBF24", glow: "rgba(251,191,36,0.45)", label: "Degradation" },
-  OFFLINE: { color: "#6B7280", glow: "rgba(107,114,128,0.4)", label: "Hors ligne" },
+type GroupDef = { value: string; label: string; color: string; glow: string; etats: string[] };
+
+const GROUPES: GroupDef[] = [
+  { value: "allume", label: "Allume", color: "#4ADE80", glow: "rgba(74,222,128,0.45)", etats: ["ALLUME"] },
+  { value: "eteint_normal", label: "Eteint (normal)", color: "#9CA3AF", glow: "rgba(156,163,175,0.35)", etats: ["JOUR_NORMAL"] },
+  { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["PANNE_ALIMENTATION", "SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE"] },
+  { value: "anomalie", label: "Anomalie", color: "#FBBF24", glow: "rgba(251,191,36,0.45)", etats: ["SURCONSOMMATION", "ETEINT_NUIT", "ALLUME_DE_JOUR", "DEFAUT_INTERMITTENT", "DEGRADATION"] },
+  { value: "hors_ligne", label: "Hors ligne", color: "#6B7280", glow: "rgba(107,114,128,0.4)", etats: ["OFFLINE"] },
+];
+
+const ETAT_LABEL: Record<string, string> = {
+  ALLUME: "Allume",
+  JOUR_NORMAL: "Eteint (normal)",
+  PANNE_ALIMENTATION: "Panne alimentation",
+  SOUS_TENSION: "Sous-tension",
+  SURTENSION: "Surtension",
+  LAMPE_POTENTIELLEMENT_GRILLEE: "Lampe grillee",
+  SURCONSOMMATION: "Surconsommation",
+  ETEINT_NUIT: "Eteinte la nuit",
+  ALLUME_DE_JOUR: "Allumee le jour",
+  DEFAUT_INTERMITTENT: "Defaut intermittent",
+  DEGRADATION: "Degradation",
+  OFFLINE: "Hors ligne",
 };
 
+function groupeFor(etat: string | null): GroupDef | undefined {
+  return GROUPES.find((g) => etat && g.etats.includes(etat));
+}
+
 function styleFor(etat: string | null) {
-  if (etat && ETAT_STYLE[etat]) return ETAT_STYLE[etat];
+  const g = groupeFor(etat);
+  if (g) return { color: g.color, glow: g.glow, label: ETAT_LABEL[etat ?? ""] ?? g.label };
   return { color: "#6B7280", glow: "rgba(107,114,128,0.3)", label: "Inconnu" };
 }
 
@@ -64,6 +79,97 @@ function getInitialCategorie(): string {
   const params = new URLSearchParams(window.location.search);
   const c = params.get("categorie");
   return c && CATEGORIES.some((cat) => cat.value === c) ? c : "tous";
+}
+
+function PoteauCard({ p }: { p: Poteau }) {
+  const s = styleFor(p.dernier_etat);
+  return (
+    <Link
+      to="/lampadaire/$deviceId"
+      params={{ deviceId: p.device_id }}
+      className="flex items-center gap-3 rounded-2xl p-3 transition-transform active:scale-[0.98]"
+      style={{
+        background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <span
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+        style={{
+          background: `radial-gradient(circle at 35% 30%, ${s.color}, ${s.color}99 70%)`,
+          boxShadow: `0 0 16px -2px ${s.glow}`,
+        }}
+      >
+        <Lightbulb className="h-5 w-5" style={{ color: "#0A0A0A" }} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-white">{p.device_id}</span>
+        <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+          {p.quartier ?? "Zone inconnue"}
+        </span>
+      </span>
+      <span className="shrink-0 text-[11px] font-semibold" style={{ color: s.color }}>
+        {s.label}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "rgba(255,255,255,0.3)" }} />
+    </Link>
+  );
+}
+
+function GroupHeader({ g, count }: { g: GroupDef; count: number }) {
+  return (
+    <div className="mt-3 mb-1 flex items-center gap-2 px-1 first:mt-0">
+      <span
+        className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
+        style={{ background: `${g.color}26` }}
+      >
+        <span className="h-2 w-2 rounded-full" style={{ background: g.color, boxShadow: `0 0 8px -1px ${g.glow}` }} />
+      </span>
+      <span className="font-display text-xs font-semibold uppercase tracking-wide" style={{ color: g.color }}>
+        {g.label}
+      </span>
+      <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+        {count}
+      </span>
+    </div>
+  );
+}
+
+function PoteauxGroupes({ poteaux }: { poteaux: Poteau[] }) {
+  return (
+    <>
+      {GROUPES.map((g) => {
+        const items = poteaux.filter((p) => groupeFor(p.dernier_etat)?.value === g.value);
+        return (
+          <div key={g.value}>
+            <GroupHeader g={g} count={items.length} />
+            {items.length === 0 ? (
+              <div
+                className="flex items-center gap-3 rounded-2xl p-3"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}
+              >
+                <span
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                >
+                  <Lightbulb className="h-5 w-5" style={{ color: "rgba(255,255,255,0.15)" }} />
+                </span>
+                <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Aucun poteau
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {items.map((p) => (
+                  <PoteauCard key={p.device_id} p={p} />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 function PoteauxListe() {
@@ -116,47 +222,21 @@ function PoteauxListe() {
           </p>
         )}
 
-        {!isLoading && poteaux && poteaux.length === 0 && (
+        {!isLoading && poteaux && categorie === "tous" && <PoteauxGroupes poteaux={poteaux} />}
+
+        {!isLoading && poteaux && categorie !== "tous" && poteaux.length === 0 && (
           <p className="mt-6 text-center text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
             Aucun poteau dans cette categorie
           </p>
         )}
 
-        {poteaux?.map((p) => {
-          const s = styleFor(p.dernier_etat);
-          return (
-            <Link
-              key={p.device_id}
-              to="/lampadaire/$deviceId"
-              params={{ deviceId: p.device_id }}
-              className="flex items-center gap-3 rounded-2xl p-3 transition-transform active:scale-[0.98]"
-              style={{
-                background: "linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <span
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
-                style={{
-                  background: `radial-gradient(circle at 35% 30%, ${s.color}, ${s.color}99 70%)`,
-                  boxShadow: `0 0 16px -2px ${s.glow}`,
-                }}
-              >
-                <Lightbulb className="h-5 w-5" style={{ color: "#0A0A0A" }} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-white">{p.device_id}</span>
-                <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  {p.quartier ?? "Zone inconnue"}
-                </span>
-              </span>
-              <span className="shrink-0 text-[11px] font-semibold" style={{ color: s.color }}>
-                {s.label}
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "rgba(255,255,255,0.3)" }} />
-            </Link>
-          );
-        })}
+        {!isLoading && poteaux && categorie !== "tous" && poteaux.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {poteaux.map((p) => (
+              <PoteauCard key={p.device_id} p={p} />
+            ))}
+          </div>
+        )}
       </div>
     </AppShell>
   );
