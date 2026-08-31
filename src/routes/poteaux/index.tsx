@@ -224,19 +224,37 @@ function PoteauxListe() {
 
         {!isLoading && poteaux && categorie === "tous" && <PoteauxGroupes poteaux={poteaux} />}
 
-        {!isLoading && poteaux && categorie !== "tous" && poteaux.length === 0 && (
-          <p className="mt-6 text-center text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Aucun poteau dans cette categorie
-          </p>
-        )}
-
-        {!isLoading && poteaux && categorie !== "tous" && poteaux.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {poteaux.map((p) => (
-              <PoteauCard key={p.device_id} p={p} />
-            ))}
-          </div>
-        )}
+        {!isLoading && poteaux && categorie !== "tous" && (() => {
+          const g = GROUPES.find((grp) => grp.value === categorie);
+          if (!g) return null;
+          return (
+            <div>
+              <GroupHeader g={g} count={poteaux.length} />
+              {poteaux.length === 0 ? (
+                <div
+                  className="flex items-center gap-3 rounded-2xl p-3"
+                  style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}
+                >
+                  <span
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full"
+                    style={{ background: "rgba(255,255,255,0.05)" }}
+                  >
+                    <Lightbulb className="h-5 w-5" style={{ color: "rgba(255,255,255,0.15)" }} />
+                  </span>
+                  <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Aucun poteau
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {poteaux.map((p) => (
+                    <PoteauCard key={p.device_id} p={p} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </AppShell>
   );
