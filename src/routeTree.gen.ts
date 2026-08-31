@@ -15,6 +15,8 @@ import { Route as CarteRouteImport } from './routes/carte'
 import { Route as InfosRouteImport } from './routes/infos'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as LampadaireDeviceIdRouteImport } from './routes/lampadaire/$deviceId'
+import { Route as PoteauxIndexRouteImport } from './routes/poteaux/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,16 @@ const ScannerRoute = ScannerRouteImport.update({
   path: '/scanner',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LampadaireDeviceIdRoute = LampadaireDeviceIdRouteImport.update({
+  id: '/lampadaire/$deviceId',
+  path: '/lampadaire/$deviceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoteauxIndexRoute = PoteauxIndexRouteImport.update({
+  id: '/poteaux/',
+  path: '/poteaux/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/scanner': typeof ScannerRoute
+  '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
+  '/poteaux/': typeof PoteauxIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/scanner': typeof ScannerRoute
+  '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
+  '/poteaux': typeof PoteauxIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +87,30 @@ export interface FileRoutesById {
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/scanner': typeof ScannerRoute
+  '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
+  '/poteaux/': typeof PoteauxIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/accueil' | '/carte' | '/infos' | '/maintenance' | '/scanner'
+    | '/'
+    | '/accueil'
+    | '/carte'
+    | '/infos'
+    | '/maintenance'
+    | '/scanner'
+    | '/lampadaire/$deviceId'
+    | '/poteaux/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/accueil' | '/carte' | '/infos' | '/maintenance' | '/scanner'
+  to:
+    | '/'
+    | '/accueil'
+    | '/carte'
+    | '/infos'
+    | '/maintenance'
+    | '/scanner'
+    | '/lampadaire/$deviceId'
+    | '/poteaux'
   id:
     | '__root__'
     | '/'
@@ -86,6 +119,8 @@ export interface FileRouteTypes {
     | '/infos'
     | '/maintenance'
     | '/scanner'
+    | '/lampadaire/$deviceId'
+    | '/poteaux/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +130,8 @@ export interface RootRouteChildren {
   InfosRoute: typeof InfosRoute
   MaintenanceRoute: typeof MaintenanceRoute
   ScannerRoute: typeof ScannerRoute
+  LampadaireDeviceIdRoute: typeof LampadaireDeviceIdRoute
+  PoteauxIndexRoute: typeof PoteauxIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScannerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lampadaire/$deviceId': {
+      id: '/lampadaire/$deviceId'
+      path: '/lampadaire/$deviceId'
+      fullPath: '/lampadaire/$deviceId'
+      preLoaderRoute: typeof LampadaireDeviceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poteaux/': {
+      id: '/poteaux/'
+      path: '/poteaux'
+      fullPath: '/poteaux/'
+      preLoaderRoute: typeof PoteauxIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   InfosRoute: InfosRoute,
   MaintenanceRoute: MaintenanceRoute,
   ScannerRoute: ScannerRoute,
+  LampadaireDeviceIdRoute: LampadaireDeviceIdRoute,
+  PoteauxIndexRoute: PoteauxIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
