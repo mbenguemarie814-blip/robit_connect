@@ -10,6 +10,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import lampHero from "@/assets/poteaux.png";
 
@@ -35,42 +36,106 @@ export const Route = createFileRoute("/accueil")({
   component: Accueil,
 });
 
-const kpis = [
-  {
-    label: "Actifs",
-    value: "182",
-    hint: "sur 194",
-    icon: <Lightbulb className="h-5 w-5" />,
-    color: "#10E8A3",
-    glow: "rgba(16,232,163,0.45)",
-  },
-  {
-    label: "Pannes",
-    value: "09",
-    hint: "à traiter",
-    icon: <AlertTriangle className="h-5 w-5" />,
-    color: "#FF3B4E",
-    glow: "rgba(255,59,78,0.45)",
-  },
-  {
-    label: "Coupures",
-    value: "03",
-    hint: "zones",
-    icon: <PowerOff className="h-5 w-5" />,
-    color: "#FFB020",
-    glow: "rgba(255,176,32,0.45)",
-  },
-  {
-    label: "Interventions",
-    value: "05",
-    hint: "en cours",
-    icon: <Wrench className="h-5 w-5" />,
-    color: "#22D3EE",
-    glow: "rgba(34,211,238,0.45)",
-  },
-];
+type DerniereAlerte = {
+  id: number;
+  device_id: string;
+  type_anomalie: string;
+  debut: string;
+  fin: string | null;
+  statut: string;
+  severite: string | null;
+  quartier: string | null;
+};
+
+type DashboardResume = {
+  total_poteaux: number;
+  actifs: number;
+  pannes_actives: number;
+  coupures: number;
+  interventions_en_cours: number;
+  derniere_alerte: DerniereAlerte | null;
+};
+
+async function fetchDashboardResume(): Promise<DashboardResume> {
+  const res = await fetch("/api/dashboard/resume");
+  if (!res.ok) throw new Error("Erreur API dashboard");
+  return res.json();
+}
+
+function disponibilitePourcent(resume: DashboardResume): string {
+  if (!resume.total_poteaux) return "0,0";
+  const pct = (resume.actifs / resume.total_poteaux) * 100;
+  return pct.toFixed(1).replace(".", ",");
+}
+
+function ilYA(dateIso: string): string {
+  const diffMs = Date.now() - new Date(dateIso + "Z").getTime();
+  const minutes = Math.max(0, Math.round(diffMs / 60000));
+  if (minutes < 1) return "a l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.round(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  return `il y a ${Math.round(heures / 24)} j`;
+}
+
+const LABELS_ANOMALIE: Record<string, string> = {
+  PANNE_ALIMENTATION: "Panne d'alimentation",
+  SOUS_TENSION: "Sous-tension",
+  SURTENSION: "Surtension",
+  SURCONSOMMATION: "Surconsommation",
+  OFFLINE: "Hors ligne",
+  ETEINT_NUIT: "Eteinte la nuit",
+  LAMPE_POTENTIELLEMENT_GRILLEE: "Lampe grillee",
+  ALLUME_DE_JOUR: "Allumee le jour",
+  DEFAUT_INTERMITTENT: "Defaut intermittent",
+  DEGRADATION: "Degradation",
+};
+
+function buildKpis(resume?: DashboardResume) {
+  return [
+    {
+      label: "Actifs",
+      value: resume ? String(resume.actifs) : "—",
+      hint: resume ? `sur ${resume.total_poteaux}` : "chargement...",
+      icon: <Lightbulb className="h-5 w-5" />,
+      color: "#10E8A3",
+      glow: "rgba(16,232,163,0.45)",
+    },
+    {
+      label: "Pannes",
+      value: resume ? String(resume.pannes_actives) : "—",
+      hint: "a traiter",
+      icon: <AlertTriangle className="h-5 w-5" />,
+      color: "#FF3B4E",
+      glow: "rgba(255,59,78,0.45)",
+    },
+    {
+      label: "Coupures",
+      value: resume ? String(resume.coupures) : "—",
+      hint: "zones",
+      icon: <PowerOff className="h-5 w-5" />,
+      color: "#FFB020",
+      glow: "rgba(255,176,32,0.45)",
+    },
+    {
+      label: "Interventions",
+      value: resume ? String(resume.interventions_en_cours) : "—",
+      hint: "en cours",
+      icon: <Wrench className="h-5 w-5" />,
+      color: "#22D3EE",
+      glow: "rgba(34,211,238,0.45)",
+    },
+  ];
+}
 
 function Accueil() {
+  const { data: resume } = useQuery({
+    queryKey: ["dashboard-resume"],
+    queryFn: fetchDashboardResume,
+    refetchInterval: 30000,
+  });
+  const kpis = buildKpis(resume);
+
   return (
     <AppShell
       header={
@@ -124,8 +189,8 @@ function Accueil() {
             </div>
 
             <div className="mt-3 grid grid-cols-3 divide-x pt-3 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.08)" }}>
-              <Stat value="93,8" unit="%" label="Disponibilité" />
-              <Stat value="194" unit="Modules" label="Déployés" />
+              <Stat value={resume ? disponibilitePourcent(resume) : "—"} unit="%" label="Disponibilité" />
+              <Stat value={resume ? String(resume.total_poteaux) : "—"} unit="Modules" label="Déployés" />
               <Stat value="4,2" unit="min" label="Détection" />
             </div>
           </section>
@@ -192,24 +257,30 @@ function Accueil() {
                 Tout voir
               </Link>
             </div>
-            <Link
-              to="/maintenance"
-              className="mt-3 flex items-center gap-3 rounded-2xl p-3"
-              style={{ background: "rgba(239,68,68,0.08)" }}
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(239,68,68,0.15)", color: "#F87171" }}>
-                <AlertTriangle className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-white">
-                  Lampe éteinte · LMP-0148
+            {resume?.derniere_alerte ? (
+              <Link
+                to="/maintenance"
+                className="mt-3 flex items-center gap-3 rounded-2xl p-3"
+                style={{ background: "rgba(239,68,68,0.08)" }}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(239,68,68,0.15)", color: "#F87171" }}>
+                  <AlertTriangle className="h-5 w-5" />
                 </span>
-                <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  Av. Cheikh Anta Diop · il y a 12 min
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-white">
+                    {LABELS_ANOMALIE[resume.derniere_alerte.type_anomalie] ?? resume.derniere_alerte.type_anomalie} · {resume.derniere_alerte.device_id}
+                  </span>
+                  <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    {resume.derniere_alerte.quartier ?? "Zone inconnue"} · {ilYA(resume.derniere_alerte.debut)}
+                  </span>
                 </span>
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "rgba(255,255,255,0.4)" }} />
-            </Link>
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "rgba(255,255,255,0.4)" }} />
+              </Link>
+            ) : (
+              <p className="mt-3 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Aucune alerte pour le moment
+              </p>
+            )}
           </section>
         </div>
       </div>
