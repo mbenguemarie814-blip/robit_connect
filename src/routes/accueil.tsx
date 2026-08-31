@@ -3,7 +3,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronRight,
-  Lightbulb,
+  Lamp,
   PowerOff,
   QrCode,
   Radio,
@@ -94,10 +94,10 @@ const LABELS_ANOMALIE: Record<string, string> = {
 function buildKpis(resume?: DashboardResume) {
   return [
     {
-      label: "Actifs",
+      label: "Poteaux Actifs",
       value: resume ? String(resume.actifs) : "—",
       hint: resume ? `sur ${resume.total_poteaux}` : "chargement...",
-      icon: <Lightbulb className="h-5 w-5" />,
+      icon: <Lamp className="h-5 w-5" />,
       color: "#10E8A3",
       glow: "rgba(16,232,163,0.45)",
     },

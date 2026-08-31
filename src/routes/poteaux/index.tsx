@@ -103,7 +103,7 @@ function PoteauCard({ p }: { p: Poteau }) {
         <Lightbulb className="h-5 w-5" style={{ color: "#0A0A0A" }} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-white">{p.device_id}</span>
+        <span className="block truncate text-sm font-semibold text-white">Lampe {p.device_id}</span>
         <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
           {p.quartier ?? "Zone inconnue"}
         </span>
