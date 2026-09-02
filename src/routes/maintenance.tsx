@@ -85,18 +85,13 @@ function niveauFor(type: string) {
 
 // Point 3 : statuts possibles pour une intervention
 const STATUT_LABEL: Record<string, string> = {
-  verifier_a_distance: "Verifier a distance",
   en_attente: "En attente",
   en_cours: "En cours",
-  resolue: "Resolue",
-  non_reparable: "Non reparable",
+  resolue: "Résolue",
+  non_reparable: "Non réparable",
 };
 
 function statutsDisponibles(typeAnomalie: string): string[] {
-  // Point 5 : cas special OFFLINE, on propose d'abord la verification a distance
-  if (typeAnomalie === "OFFLINE") {
-    return ["verifier_a_distance", "en_attente", "en_cours", "resolue", "non_reparable"];
-  }
   return ["en_attente", "en_cours", "resolue", "non_reparable"];
 }
 
