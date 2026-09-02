@@ -25,7 +25,7 @@ const fieldStyle: React.CSSProperties = {
   color: "#fff",
 };
 
-const ALLOWED_SCANNER_URL = "https://robit-connect.vercel.app/scanner";
+const ALLOWED_SCANNER_URL = "https://robit-connect-vert.vercel.app/scanner";
 
 function extractDeviceId(raw: string): string | null {
   try {
@@ -150,6 +150,21 @@ function Scanner() {
     );
   }, [deviceId]);
 
+  // Numero de poteau auto-incremente, propose des que le QR est scanne
+  useEffect(() => {
+    if (!deviceId) return;
+    let cancelled = false;
+    fetch("/api/poteaux/next-numero")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.pole_number) setPoleNumber(data.pole_number);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId]);
+
   const handleRescan = () => {
     setDeviceId(null);
     setGps(null);
@@ -171,26 +186,21 @@ function Scanner() {
     setSubmitting(true);
     setSubmitError(null);
 
-    const now = new Date(installedAt);
-
     const payload = {
       device_id: deviceId,
       pole_number: poleNumber,
       latitude: gps.lat,
       longitude: gps.lng,
-      gps_accuracy_m: Math.round(gps.accuracy),
-      district,
+      quartier: district,
       commune,
-      city,
+      ville: city,
       zone,
-      lamp_type: lampType,
-      power: Number(power),
-      install_date: now.toISOString().split("T")[0],
-      install_time: now.toTimeString().split(" ")[0],
+      type_lampe: lampType,
+      puissance_w: Number(power),
     };
 
     try {
-      const res = await fetch("/nodered/install", {
+      const res = await fetch("/api/poteaux", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -281,7 +291,7 @@ function Scanner() {
               }}
             >
               <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>À compléter</p>
-              <Field label="Numéro du poteau" value={poleNumber} onChange={setPoleNumber} placeholder="Ex: DK-2548" />
+              <Field label="Numéro du poteau" value={poleNumber} onChange={setPoleNumber} placeholder="Rempli automatiquement" />
               <Field label="Quartier" value={district} onChange={setDistrict} placeholder="Ex: Plateau" />
               <Field label="Commune" value={commune} onChange={setCommune} placeholder="Ex: Dakar-Plateau" />
               <Field label="Ville" value={city} onChange={setCity} placeholder="Ex: Dakar" />
