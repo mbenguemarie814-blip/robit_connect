@@ -198,9 +198,9 @@ function LeafletMap({ poteaux }: { poteaux: Poteau[] }) {
       const s = styleFor(p.dernier_etat);
       const icon = L.divIcon({
         className: "",
-        html: `<div style="width:28px;height:28px;border-radius:9999px 9999px 9999px 2px;transform:rotate(45deg);background:radial-gradient(circle at 35% 30%, ${s.color}, ${s.dark} 70%);box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s.dark}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(-45deg);"><path d="M8 2h8l4 10H4L8 2Z"/><path d="M12 12v6"/><path d="M8 22v-2c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"/></svg></div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 28],
+        html: `<div style="width:32px;height:32px;border-radius:9999px;background:radial-gradient(circle at 35% 30%, ${s.color}, ${s.dark} 70%);box-shadow:0 2px 8px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${s.dark}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.5 5.5 0 1 0 7.5 8.5a5.5 5.5 0 0 0 1.5 4c.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
       });
       const marker = L.marker([p.latitude, p.longitude], { icon }).addTo(map);
       marker.on("click", () => {
