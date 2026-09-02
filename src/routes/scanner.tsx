@@ -25,13 +25,19 @@ const fieldStyle: React.CSSProperties = {
   color: "#fff",
 };
 
-const ALLOWED_SCANNER_URL = "https://robit-connect-vert.vercel.app/scanner";
+const ALLOWED_SCANNER_URLS = [
+  "https://robit-connect-vert.vercel.app/scanner",
+  "https://robit-connect.vercel.app/scanner", // ancien domaine, QR physiques pas encore remplaces
+];
 
 function extractDeviceId(raw: string): string | null {
   try {
     const url = new URL(raw);
-    const base = new URL(ALLOWED_SCANNER_URL);
-    if (url.origin !== base.origin || url.pathname !== base.pathname) return null;
+    const matches = ALLOWED_SCANNER_URLS.some((allowed) => {
+      const base = new URL(allowed);
+      return url.origin === base.origin && url.pathname === base.pathname;
+    });
+    if (!matches) return null;
     const id = url.searchParams.get("id");
     return id && id.trim() ? id.trim() : null;
   } catch {
