@@ -144,7 +144,10 @@ function Maintenance() {
     }
   });
 
-  const enCoursCount = (interventions ?? []).filter((i) => i.statut === "en_cours" || i.statut === "en_attente").length;
+  const idsAlertesActives = new Set((alertes ?? []).map((a) => a.id));
+  const enCoursCount = (interventions ?? []).filter(
+    (i) => (i.statut === "en_cours" || i.statut === "en_attente") && i.alerte_id != null && idsAlertesActives.has(i.alerte_id),
+  ).length;
 
   return (
     <AppShell>
