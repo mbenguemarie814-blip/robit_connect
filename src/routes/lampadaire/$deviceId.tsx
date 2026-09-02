@@ -22,6 +22,9 @@ type DetailResponse = {
     device_id: string;
     quartier: string | null;
     commune: string | null;
+    zone: string | null;
+    latitude: number | null;
+    longitude: number | null;
     type_lampe: string | null;
     puissance_w: number | null;
     dernier_etat: string | null;
@@ -145,6 +148,15 @@ function LampadaireDetail() {
             >
               <InfoRow label="Puissance nominale" value={data.poteau.puissance_w ? `${data.poteau.puissance_w} W` : "—"} />
               <InfoRow label="Type de lampe" value={data.poteau.type_lampe ?? "—"} />
+              <InfoRow label="Zone" value={data.poteau.zone ?? "—"} />
+              <InfoRow
+                label="Localisation"
+                value={
+                  data.poteau.latitude != null && data.poteau.longitude != null
+                    ? `${data.poteau.latitude.toFixed(5)}, ${data.poteau.longitude.toFixed(5)}`
+                    : "—"
+                }
+              />
               <InfoRow
                 label="Derniere mesure"
                 value={data.derniere_mesure ? ilYA(data.derniere_mesure.time) : "Aucune donnee"}
