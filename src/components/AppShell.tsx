@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Map, Wrench, Info } from "lucide-react";
+import { Home, Map, Wrench, History } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 
 const tabs = [
   { to: "/accueil", label: "Accueil", icon: Home },
   { to: "/carte", label: "Carte", icon: Map },
   { to: "/maintenance", label: "Maintenance", icon: Wrench },
-  { to: "/infos", label: "Infos", icon: Info },
+  { to: "/infos", label: "Historique", icon: History },
 ] as const;
 
 export function AppShell({ header, children }: { header?: ReactNode; children: ReactNode }) {
