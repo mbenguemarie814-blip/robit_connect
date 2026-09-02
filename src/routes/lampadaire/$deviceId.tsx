@@ -135,12 +135,23 @@ function LampadaireDetail() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={data.derniere_mesure?.voltage} unit="V" />
-              <Mesure icon={<Activity className="h-4 w-4" />} label="Courant" value={data.derniere_mesure?.current} unit="A" decimals={2} />
-              <Mesure icon={<Gauge className="h-4 w-4" />} label="Puissance" value={data.derniere_mesure?.power} unit="W" />
-              <Mesure icon={<Activity className="h-4 w-4" />} label="Frequence" value={data.derniere_mesure?.frequency} unit="Hz" />
-            </div>
+            {data.poteau.dernier_etat === "OFFLINE" ? (
+              <div
+                className="rounded-2xl p-4 text-center"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.1)" }}
+              >
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  Aucune mesure — le module ne transmet plus de donnees
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2.5">
+                <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={data.derniere_mesure?.voltage} unit="V" />
+                <Mesure icon={<Activity className="h-4 w-4" />} label="Courant" value={data.derniere_mesure?.current} unit="A" decimals={2} />
+                <Mesure icon={<Gauge className="h-4 w-4" />} label="Puissance" value={data.derniere_mesure?.power} unit="W" />
+                <Mesure icon={<Activity className="h-4 w-4" />} label="Frequence" value={data.derniere_mesure?.frequency} unit="Hz" />
+              </div>
+            )}
 
             <div
               className="rounded-2xl p-3"
