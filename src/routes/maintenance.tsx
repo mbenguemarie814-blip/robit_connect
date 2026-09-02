@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CheckCircle2, Wrench, AlertTriangle, X } from "lucide-react";
+import { CheckCircle2, Wrench, AlertTriangle, X, MapPin } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/maintenance")({
@@ -25,6 +25,17 @@ type AlerteRow = {
   severite: string | null;
   debut: string;
   quartier: string | null;
+  commune: string | null;
+  zone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+type InterventionRow = {
+  id: number;
+  alerte_id: number | null;
+  statut: string;
+  date_intervention: string;
 };
 
 const CATEGORIES = [
@@ -47,18 +58,47 @@ const ANOMALIE_LABEL: Record<string, string> = {
   OFFLINE: "Hors ligne",
 };
 
-const ANOMALIE_COLOR: Record<string, string> = {
-  PANNE_ALIMENTATION: "#F87171",
-  SOUS_TENSION: "#F87171",
-  SURTENSION: "#F87171",
-  LAMPE_POTENTIELLEMENT_GRILLEE: "#F87171",
-  SURCONSOMMATION: "#FBBF24",
-  ETEINT_NUIT: "#FBBF24",
-  ALLUME_DE_JOUR: "#FBBF24",
-  DEFAUT_INTERMITTENT: "#FBBF24",
-  DEGRADATION: "#FBBF24",
-  OFFLINE: "#9CA3AF",
+// Point 1 : niveau d'urgence par type d'anomalie (remplace le texte brut "Verifier communication" etc.)
+const NIVEAU_PAR_ANOMALIE: Record<string, "Urgent" | "Critique" | "Grave" | "Normal"> = {
+  PANNE_ALIMENTATION: "Urgent",
+  SOUS_TENSION: "Urgent",
+  SURTENSION: "Urgent",
+  LAMPE_POTENTIELLEMENT_GRILLEE: "Critique",
+  SURCONSOMMATION: "Grave",
+  DEGRADATION: "Grave",
+  ETEINT_NUIT: "Normal",
+  ALLUME_DE_JOUR: "Normal",
+  DEFAUT_INTERMITTENT: "Normal",
+  OFFLINE: "Normal", // cas special, voir point 5
 };
+
+const NIVEAU_STYLE: Record<string, string> = {
+  Urgent: "#EF4444",
+  Critique: "#F97316",
+  Grave: "#FBBF24",
+  Normal: "#9CA3AF",
+};
+
+function niveauFor(type: string) {
+  return NIVEAU_PAR_ANOMALIE[type] ?? "Normal";
+}
+
+// Point 3 : statuts possibles pour une intervention
+const STATUT_LABEL: Record<string, string> = {
+  verifier_a_distance: "Verifier a distance",
+  en_attente: "En attente",
+  en_cours: "En cours",
+  resolue: "Resolue",
+  non_reparable: "Non reparable",
+};
+
+function statutsDisponibles(typeAnomalie: string): string[] {
+  // Point 5 : cas special OFFLINE, on propose d'abord la verification a distance
+  if (typeAnomalie === "OFFLINE") {
+    return ["verifier_a_distance", "en_attente", "en_cours", "resolue", "non_reparable"];
+  }
+  return ["en_attente", "en_cours", "resolue", "non_reparable"];
+}
 
 function ilYA(dateIso: string): string {
   const diffMs = Date.now() - new Date(dateIso).getTime();
@@ -78,8 +118,8 @@ async function fetchAlertesActives(categorie: string): Promise<AlerteRow[]> {
   return res.json();
 }
 
-async function fetchInterventionsEnCours(): Promise<any[]> {
-  const res = await fetch("/api/interventions?statut=en_cours");
+async function fetchInterventions(): Promise<InterventionRow[]> {
+  const res = await fetch("/api/interventions");
   if (!res.ok) throw new Error("Erreur API interventions");
   return res.json();
 }
@@ -96,10 +136,20 @@ function Maintenance() {
   });
 
   const { data: interventions } = useQuery({
-    queryKey: ["interventions-en-cours"],
-    queryFn: fetchInterventionsEnCours,
+    queryKey: ["interventions"],
+    queryFn: fetchInterventions,
     refetchInterval: 30000,
   });
+
+  // Point 4 : derniere intervention connue par alerte, pour afficher son statut en badge
+  const dernierStatutParAlerte = new Map<number, string>();
+  (interventions ?? []).forEach((i) => {
+    if (i.alerte_id != null && !dernierStatutParAlerte.has(i.alerte_id)) {
+      dernierStatutParAlerte.set(i.alerte_id, i.statut);
+    }
+  });
+
+  const enCoursCount = (interventions ?? []).filter((i) => i.statut === "en_cours" || i.statut === "en_attente").length;
 
   return (
     <AppShell>
@@ -108,14 +158,12 @@ function Maintenance() {
           <h1 className="font-display text-2xl font-bold text-white">Maintenance</h1>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
             {alertes ? `${alertes.length} alerte${alertes.length > 1 ? "s" : ""} active${alertes.length > 1 ? "s" : ""}` : "Chargement..."}
-            {" · "}
-            {interventions ? `${interventions.length} intervention${interventions.length > 1 ? "s" : ""} en cours` : "..."}
           </p>
         </header>
 
         <div className="grid grid-cols-2 gap-3">
           <Metric icon={<AlertTriangle className="h-4 w-4" />} value={String(alertes?.length ?? "—")} label="Actives" color="#F87171" />
-          <Metric icon={<Wrench className="h-4 w-4" />} value={String(interventions?.length ?? "—")} label="En cours" color="#22D3EE" />
+          <Metric icon={<Wrench className="h-4 w-4" />} value={String(enCoursCount)} label="En traitement" color="#22D3EE" />
         </div>
 
         <select
@@ -150,7 +198,9 @@ function Maintenance() {
           )}
 
           {alertes?.map((a) => {
-            const color = ANOMALIE_COLOR[a.type_anomalie] ?? "#9CA3AF";
+            const niveau = niveauFor(a.type_anomalie);
+            const color = NIVEAU_STYLE[niveau];
+            const statutIntervention = dernierStatutParAlerte.get(a.id);
             return (
               <button
                 key={a.id}
@@ -167,12 +217,15 @@ function Maintenance() {
                   <span className="block truncate text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>
                     {a.device_id} · {a.quartier ?? "Zone inconnue"} · {ilYA(a.debut)}
                   </span>
+                  {statutIntervention && (
+                    <span className="mt-1 inline-block text-[10px] font-semibold" style={{ color: "#22D3EE" }}>
+                      {STATUT_LABEL[statutIntervention] ?? statutIntervention}
+                    </span>
+                  )}
                 </span>
-                {a.severite && (
-                  <span className="shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold" style={{ color, background: `${color}26` }}>
-                    {a.severite}
-                  </span>
-                )}
+                <span className="shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold" style={{ color, background: `${color}26` }}>
+                  {niveau}
+                </span>
               </button>
             );
           })}
@@ -186,7 +239,7 @@ function Maintenance() {
           onDone={() => {
             setSelected(null);
             queryClient.invalidateQueries({ queryKey: ["alertes-actives"] });
-            queryClient.invalidateQueries({ queryKey: ["interventions-en-cours"] });
+            queryClient.invalidateQueries({ queryKey: ["interventions"] });
           }}
         />
       )}
@@ -194,16 +247,16 @@ function Maintenance() {
   );
 }
 
+// Point 2 + 3 : entete avec details du poteau + bouton carte, choix du statut (plus de champs texte)
 function InterventionModal({
   alerte, onClose, onDone,
 }: { alerte: AlerteRow; onClose: () => void; onDone: () => void }) {
-  const [technicien, setTechnicien] = useState("");
-  const [description, setDescription] = useState("");
-  const [closeAlerte, setCloseAlerte] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const niveau = niveauFor(alerte.type_anomalie);
+  const color = NIVEAU_STYLE[niveau];
 
-  const handleSubmit = async () => {
+  const handleChoix = async (statutChoisi: string) => {
     setSubmitting(true);
     setError(null);
     try {
@@ -212,14 +265,12 @@ function InterventionModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           alerte_id: alerte.id,
-          technicien,
-          description,
-          statut: closeAlerte ? "terminee" : "en_cours",
+          statut: statutChoisi,
         }),
       });
       if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
 
-      if (closeAlerte) {
+      if (statutChoisi === "resolue") {
         const resAlerte = await fetch(`/api/alertes/${alerte.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -231,7 +282,6 @@ function InterventionModal({
       onDone();
     } catch (err: any) {
       setError(err?.message ?? "Echec de l'enregistrement");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -243,61 +293,75 @@ function InterventionModal({
         style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="font-display text-base font-bold text-white">Nouvelle intervention</p>
+        <div className="mb-4 flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <span className="mb-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-semibold" style={{ color, background: `${color}26` }}>
+              {niveau}
+            </span>
+            <p className="font-display text-base font-bold text-white">
+              {ANOMALIE_LABEL[alerte.type_anomalie] ?? alerte.type_anomalie}
+            </p>
             <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-              {ANOMALIE_LABEL[alerte.type_anomalie] ?? alerte.type_anomalie} · {alerte.device_id}
+              Detectee {ilYA(alerte.debut)}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "#fff" }}>
+          <button type="button" onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "#fff" }}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <label className="mb-3 flex flex-col gap-1.5">
-          <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Technicien</span>
-          <input
-            value={technicien}
-            onChange={(e) => setTechnicien(e.target.value)}
-            placeholder="Nom du technicien"
-            className="rounded-xl px-3.5 py-3 text-sm outline-none"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
-          />
-        </label>
+        {/* Point 2 : details du poteau */}
+        <div className="mb-4 flex flex-col gap-1.5 rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <DetailRow label="Poteau" value={alerte.device_id} />
+          <DetailRow label="Quartier" value={alerte.quartier ?? "—"} />
+          <DetailRow label="Commune" value={alerte.commune ?? "—"} />
+          <DetailRow label="Zone" value={alerte.zone ?? "—"} />
+        </div>
 
-        <label className="mb-3 flex flex-col gap-1.5">
-          <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Description</span>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Action realisee..."
-            rows={3}
-            className="resize-none rounded-xl px-3.5 py-3 text-sm outline-none"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
-          />
-        </label>
-
-        <label className="mb-4 flex items-center gap-2">
-          <input type="checkbox" checked={closeAlerte} onChange={(e) => setCloseAlerte(e.target.checked)} />
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>Marquer l'alerte comme resolue</span>
-        </label>
+        {alerte.latitude != null && alerte.longitude != null && (
+          <Link
+            to="/carte"
+            search={{ focus: alerte.device_id } as any}
+            className="mb-4 flex items-center justify-center gap-2 rounded-2xl py-2.5 text-xs font-semibold"
+            style={{ background: "rgba(255,255,255,0.06)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.3)" }}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Voir sur la carte
+          </Link>
+        )}
 
         {error && <p className="mb-3 text-xs" style={{ color: "#F87171" }}>{error}</p>}
 
-        <button
-          type="button"
-          disabled={!technicien || submitting}
-          onClick={handleSubmit}
-          className="w-full rounded-2xl py-3 text-sm font-semibold"
-          style={{
-            background: technicien ? "linear-gradient(90deg, #22C55E, #15803D)" : "rgba(255,255,255,0.06)",
-            color: technicien ? "#fff" : "rgba(255,255,255,0.3)",
-          }}
-        >
-          {submitting ? "Enregistrement..." : "Enregistrer l'intervention"}
-        </button>
+        {/* Point 3 : choix du statut, plus de champs texte */}
+        <p className="mb-2 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>Action du technicien</p>
+        <div className="flex flex-col gap-2">
+          {statutsDisponibles(alerte.type_anomalie).map((s) => (
+            <button
+              key={s}
+              type="button"
+              disabled={submitting}
+              onClick={() => handleChoix(s)}
+              className="w-full rounded-2xl py-3 text-sm font-semibold transition-transform active:scale-[0.98]"
+              style={
+                s === "resolue"
+                  ? { background: "linear-gradient(90deg, #22C55E, #15803D)", color: "#fff" }
+                  : { background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)" }
+              }
+            >
+              {STATUT_LABEL[s]}
+            </button>
+          ))}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
+      <span className="text-xs font-semibold text-white">{value}</span>
     </div>
   );
 }

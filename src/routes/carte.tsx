@@ -59,6 +59,11 @@ async function fetchPoteaux(): Promise<Poteau[]> {
 }
 
 function Carte() {
+  const [focusId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return new URLSearchParams(window.location.search).get("focus");
+  });
+
   const { data: poteaux } = useQuery({
     queryKey: ["poteaux-carte"],
     queryFn: fetchPoteaux,
@@ -80,7 +85,7 @@ function Carte() {
     >
       <div className="relative" style={{ background: "#0A0A0A" }}>
         <div className="relative h-80 w-full overflow-hidden">
-          <LeafletMap poteaux={localises} />
+          <LeafletMap poteaux={localises} focusId={focusId} />
 
           <div
             className="pointer-events-none absolute bottom-2 left-2 right-2 flex flex-wrap gap-x-3.5 gap-y-1.5 rounded-2xl p-2.5"
@@ -148,7 +153,7 @@ function PoteauRow({ p }: { p: Poteau }) {
   );
 }
 
-function LeafletMap({ poteaux }: { poteaux: Poteau[] }) {
+function LeafletMap({ poteaux, focusId }: { poteaux: Poteau[]; focusId: string | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -208,7 +213,14 @@ function LeafletMap({ poteaux }: { poteaux: Poteau[] }) {
       });
       markersRef.current.push(marker);
     });
-  }, [ready, poteaux]);
+
+    if (focusId) {
+      const cible = poteaux.find((p) => p.device_id === focusId);
+      if (cible && cible.latitude != null && cible.longitude != null) {
+        map.setView([cible.latitude, cible.longitude], 16);
+      }
+    }
+  }, [ready, poteaux, focusId]);
 
   return (
     <div ref={containerRef} className="h-full w-full" style={{ background: "#EAE6DD" }}>
