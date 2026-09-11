@@ -62,6 +62,14 @@ async function fetchDashboardResume(): Promise<DashboardResume> {
   return res.json();
 }
 
+type Gateway = { gateway_id: string };
+
+async function fetchGateways(): Promise<Gateway[]> {
+  const res = await fetch("/api/gateways");
+  if (!res.ok) throw new Error("Erreur API gateways");
+  return res.json();
+}
+
 function disponibilitePourcent(resume: DashboardResume): string {
   if (!resume.total_poteaux) return "0,0";
   const pct = (resume.actifs / resume.total_poteaux) * 100;
@@ -134,6 +142,11 @@ function Accueil() {
     queryFn: fetchDashboardResume,
     refetchInterval: 30000,
   });
+  const { data: gateways } = useQuery({
+    queryKey: ["gateways"],
+    queryFn: fetchGateways,
+    refetchInterval: 30000,
+  });
   const kpis = buildKpis(resume);
 
   return (
@@ -189,7 +202,9 @@ function Accueil() {
             </div>
 
             <div className="mt-3 grid grid-cols-3 divide-x pt-3 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.08)" }}>
-              <Stat value={resume ? disponibilitePourcent(resume) : "—"} unit="%" label="Disponibilité" />
+              <Link to="/master" className="block">
+                <Stat value={gateways ? String(gateways.length) : "—"} unit="Master" label="Passerelles" />
+              </Link>
               <Stat value={resume ? String(resume.total_poteaux) : "—"} unit="Modules" label="Déployés" />
               <Stat value="4,2" unit="min" label="Détection" />
             </div>

@@ -14,6 +14,7 @@ import { Route as AccueilRouteImport } from './routes/accueil'
 import { Route as CarteRouteImport } from './routes/carte'
 import { Route as InfosRouteImport } from './routes/infos'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as MasterRouteImport } from './routes/master'
 import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as LampadaireDeviceIdRouteImport } from './routes/lampadaire/$deviceId'
 import { Route as PoteauxIndexRouteImport } from './routes/poteaux/index'
@@ -43,6 +44,11 @@ const MaintenanceRoute = MaintenanceRouteImport.update({
   path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterRoute = MasterRouteImport.update({
+  id: '/master',
+  path: '/master',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScannerRoute = ScannerRouteImport.update({
   id: '/scanner',
   path: '/scanner',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/carte': typeof CarteRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/master': typeof MasterRoute
   '/scanner': typeof ScannerRoute
   '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
   '/poteaux/': typeof PoteauxIndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/carte': typeof CarteRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/master': typeof MasterRoute
   '/scanner': typeof ScannerRoute
   '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
   '/poteaux': typeof PoteauxIndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/carte': typeof CarteRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/master': typeof MasterRoute
   '/scanner': typeof ScannerRoute
   '/lampadaire/$deviceId': typeof LampadaireDeviceIdRoute
   '/poteaux/': typeof PoteauxIndexRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/carte'
     | '/infos'
     | '/maintenance'
+    | '/master'
     | '/scanner'
     | '/lampadaire/$deviceId'
     | '/poteaux/'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/carte'
     | '/infos'
     | '/maintenance'
+    | '/master'
     | '/scanner'
     | '/lampadaire/$deviceId'
     | '/poteaux'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/carte'
     | '/infos'
     | '/maintenance'
+    | '/master'
     | '/scanner'
     | '/lampadaire/$deviceId'
     | '/poteaux/'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   CarteRoute: typeof CarteRoute
   InfosRoute: typeof InfosRoute
   MaintenanceRoute: typeof MaintenanceRoute
+  MasterRoute: typeof MasterRoute
   ScannerRoute: typeof ScannerRoute
   LampadaireDeviceIdRoute: typeof LampadaireDeviceIdRoute
   PoteauxIndexRoute: typeof PoteauxIndexRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master': {
+      id: '/master'
+      path: '/master'
+      fullPath: '/master'
+      preLoaderRoute: typeof MasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/scanner': {
       id: '/scanner'
       path: '/scanner'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   CarteRoute: CarteRoute,
   InfosRoute: InfosRoute,
   MaintenanceRoute: MaintenanceRoute,
+  MasterRoute: MasterRoute,
   ScannerRoute: ScannerRoute,
   LampadaireDeviceIdRoute: LampadaireDeviceIdRoute,
   PoteauxIndexRoute: PoteauxIndexRoute,
