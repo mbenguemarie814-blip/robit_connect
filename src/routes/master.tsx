@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Battery, Bolt, Gauge, Zap, RefreshCw } from "lucide-react";
+import { ArrowLeft, Battery, Bolt, Gauge, Zap, RefreshCw, Sun, Moon, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/master")({
@@ -18,7 +18,24 @@ type Gateway = {
   power_mW: number | null;
   battery_percent: number | null;
   charging: boolean | null;
+  is_night: boolean | null;
 };
+
+function infoRecharge(charging: boolean | null, isNight: boolean | null) {
+  if (isNight == null) {
+    return { label: "Statut inconnu", color: "#9CA3AF", bg: "rgba(156,163,175,0.12)", icone: "inconnu" as const };
+  }
+  if (isNight) {
+    if (charging) {
+      return { label: "Charge externe active", color: "#4ADE80", bg: "rgba(74,222,128,0.12)", icone: "eclair" as const };
+    }
+    return { label: "Nuit — pas de recharge (normal)", color: "#9CA3AF", bg: "rgba(156,163,175,0.1)", icone: "lune" as const };
+  }
+  if (charging) {
+    return { label: "Recharge solaire active", color: "#4ADE80", bg: "rgba(74,222,128,0.12)", icone: "eclair" as const };
+  }
+  return { label: "Pas de recharge — a verifier", color: "#FBBF24", bg: "rgba(251,191,36,0.12)", icone: "alerte" as const };
+}
 
 async function fetchGateways(): Promise<Gateway[]> {
   const res = await fetch("/api/gateways");
@@ -143,15 +160,21 @@ function MasterListe() {
                 </div>
               </div>
 
-              {g.charging && (
-                <span
-                  className="flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold"
-                  style={{ color: "#4ADE80", background: "rgba(74,222,128,0.12)" }}
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  En charge (solaire)
-                </span>
-              )}
+              {(() => {
+                const info = infoRecharge(g.charging, g.is_night);
+                return (
+                  <span
+                    className="flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold"
+                    style={{ color: info.color, background: info.bg }}
+                  >
+                    {info.icone === "eclair" && <RefreshCw className="h-3 w-3" />}
+                    {info.icone === "lune" && <Moon className="h-3 w-3" />}
+                    {info.icone === "alerte" && <AlertTriangle className="h-3 w-3" />}
+                    {g.is_night === false && info.icone !== "alerte" && <Sun className="h-3 w-3" />}
+                    {info.label}
+                  </span>
+                );
+              })()}
 
               <div className="grid grid-cols-3 gap-2.5">
                 <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={g.voltage} unit="V" />
