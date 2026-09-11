@@ -33,6 +33,20 @@ function couleurBatterie(pct: number | null): string {
   return "#4ADE80";
 }
 
+function etatBatterie(pct: number | null): string {
+  if (pct == null) return "Inconnu";
+  if (pct < 15) return "Critique";
+  if (pct < 40) return "Faible";
+  if (pct < 80) return "Correcte";
+  return "Pleine";
+}
+
+const SEUIL_HORS_LIGNE_MS = 90000; // 90 secondes
+
+function masterEnLigne(dateIso: string): boolean {
+  return Date.now() - new Date(dateIso).getTime() < SEUIL_HORS_LIGNE_MS;
+}
+
 function ilYA(dateIso: string): string {
   const diffMs = Date.now() - new Date(dateIso).getTime();
   const minutes = Math.max(0, Math.round(diffMs / 60000));
@@ -96,7 +110,16 @@ function MasterListe() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-display text-base font-bold text-white">{g.gateway_id}</p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        background: masterEnLigne(g.time) ? "#4ADE80" : "#F87171",
+                        boxShadow: masterEnLigne(g.time) ? "0 0 6px -1px #4ADE80" : "0 0 6px -1px #F87171",
+                      }}
+                    />
+                    <p className="font-display text-base font-bold text-white">{g.gateway_id}</p>
+                  </div>
                   <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
                     Mise a jour {ilYA(g.time)}
                   </p>
@@ -113,6 +136,9 @@ function MasterListe() {
                   </div>
                   <p className="mt-1 text-xs font-bold" style={{ color: couleur }}>
                     {g.battery_percent != null ? `${g.battery_percent.toFixed(0)}%` : "—"}
+                  </p>
+                  <p className="text-[10px] font-semibold" style={{ color: couleur }}>
+                    {etatBatterie(g.battery_percent)}
                   </p>
                 </div>
               </div>
