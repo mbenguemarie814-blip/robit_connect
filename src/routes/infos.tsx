@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
+import { Download } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/infos")({
@@ -58,6 +59,29 @@ function Historique() {
     refetchInterval: 30000,
   });
 
+  const [telechargement, setTelechargement] = useState(false);
+
+  const telechargerRapport = async () => {
+    setTelechargement(true);
+    try {
+      const res = await fetch(`/api/rapport?periode=${periode}`);
+      if (!res.ok) throw new Error("Erreur lors de la generation du rapport");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rapport-ert-${periode}-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTelechargement(false);
+    }
+  };
+
   const pieData = data
     ? (["panne", "anomalie", "hors_ligne"] as const)
         .map((k) => ({ name: LABELS[k], value: data.repartition[k], color: COULEURS[k] }))
@@ -107,6 +131,21 @@ function Historique() {
             </button>
           ))}
         </div>
+
+        <button
+          type="button"
+          disabled={telechargement}
+          onClick={telechargerRapport}
+          className="flex items-center justify-center gap-2 rounded-2xl py-2.5 text-xs font-semibold"
+          style={{
+            background: telechargement ? "rgba(255,255,255,0.06)" : "rgba(251,191,36,0.12)",
+            color: telechargement ? "rgba(255,255,255,0.4)" : "#FBBF24",
+            border: "1px solid rgba(251,191,36,0.3)",
+          }}
+        >
+          <Download className="h-3.5 w-3.5" />
+          {telechargement ? "Generation du rapport..." : "Telecharger le rapport (PDF)"}
+        </button>
 
         {isLoading && (
           <p className="mt-2 text-center text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Chargement...</p>
