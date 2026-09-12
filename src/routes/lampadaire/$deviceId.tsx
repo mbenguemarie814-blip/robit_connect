@@ -90,42 +90,62 @@ function LampadaireDetail() {
   const [maj, setMaj] = useState(false);
   const [erreurMaj, setErreurMaj] = useState<string | null>(null);
 
+  const [formulaireManuel, setFormulaireManuel] = useState(false);
+  const [latManuel, setLatManuel] = useState("");
+  const [lngManuel, setLngManuel] = useState("");
+
+  const mettreAJourPosition = async (lat: number, lng: number) => {
+    if (!data) return;
+    setMaj(true);
+    setErreurMaj(null);
+    try {
+      const res = await fetch(`/api/poteaux/${deviceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          device_id: deviceId,
+          latitude: lat,
+          longitude: lng,
+          quartier: data.poteau.quartier,
+          commune: data.poteau.commune,
+          zone: data.poteau.zone,
+          type_lampe: data.poteau.type_lampe,
+          puissance_w: data.poteau.puissance_w,
+        }),
+      });
+      if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+      queryClient.invalidateQueries({ queryKey: ["lampadaire-detail", deviceId] });
+      setFormulaireManuel(false);
+    } catch (err: any) {
+      setErreurMaj(err?.message ?? "Echec de la mise a jour");
+    } finally {
+      setMaj(false);
+    }
+  };
+
   const reprendrePosition = () => {
-    if (!data || !navigator.geolocation) return;
+    if (!navigator.geolocation) return;
     setMaj(true);
     setErreurMaj(null);
 
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(`/api/poteaux/${deviceId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              device_id: deviceId,
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              quartier: data.poteau.quartier,
-              commune: data.poteau.commune,
-              zone: data.poteau.zone,
-              type_lampe: data.poteau.type_lampe,
-              puissance_w: data.poteau.puissance_w,
-            }),
-          });
-          if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
-          queryClient.invalidateQueries({ queryKey: ["lampadaire-detail", deviceId] });
-        } catch (err: any) {
-          setErreurMaj(err?.message ?? "Echec de la mise a jour");
-        } finally {
-          setMaj(false);
-        }
-      },
+      (pos) => mettreAJourPosition(pos.coords.latitude, pos.coords.longitude),
       () => {
         setErreurMaj("Position GPS indisponible. Verifie l'autorisation de localisation.");
         setMaj(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
+  };
+
+  const validerPositionManuelle = () => {
+    const lat = parseFloat(latManuel);
+    const lng = parseFloat(lngManuel);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      setErreurMaj("Latitude/longitude invalides.");
+      return;
+    }
+    mettreAJourPosition(lat, lng);
   };
 
   const s = styleFor(data?.poteau.dernier_etat ?? null);
@@ -228,6 +248,56 @@ function LampadaireDetail() {
                 </button>
                 {erreurMaj && (
                   <p className="mt-1.5 text-[11px]" style={{ color: "#F87171" }}>{erreurMaj}</p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormulaireManuel((v) => !v);
+                    if (data?.poteau.latitude != null) setLatManuel(String(data.poteau.latitude));
+                    if (data?.poteau.longitude != null) setLngManuel(String(data.poteau.longitude));
+                  }}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold"
+                  style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}
+                >
+                  Saisir la position manuellement
+                </button>
+
+                {formulaireManuel && (
+                  <div className="mt-2 flex flex-col gap-2 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Latitude</span>
+                      <input
+                        value={latManuel}
+                        onChange={(e) => setLatManuel(e.target.value)}
+                        placeholder="Ex: 14.6937"
+                        className="rounded-lg px-3 py-2 text-sm outline-none"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Longitude</span>
+                      <input
+                        value={lngManuel}
+                        onChange={(e) => setLngManuel(e.target.value)}
+                        placeholder="Ex: -17.4441"
+                        className="rounded-lg px-3 py-2 text-sm outline-none"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      disabled={maj}
+                      onClick={validerPositionManuelle}
+                      className="mt-1 rounded-lg py-2 text-xs font-semibold"
+                      style={{
+                        background: maj ? "rgba(255,255,255,0.06)" : "linear-gradient(90deg, #22C55E, #15803D)",
+                        color: maj ? "rgba(255,255,255,0.4)" : "#fff",
+                      }}
+                    >
+                      {maj ? "Enregistrement..." : "Valider la position"}
+                    </button>
+                  </div>
                 )}
               </div>
               <InfoRow
