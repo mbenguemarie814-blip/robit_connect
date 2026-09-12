@@ -152,7 +152,7 @@ function Scanner() {
             : "Impossible d'obtenir la position GPS.",
         );
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }, [deviceId]);
 

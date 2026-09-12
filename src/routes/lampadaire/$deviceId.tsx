@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bolt, Gauge, Zap, Activity, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Bolt, Gauge, Zap, Activity, CheckCircle2, AlertTriangle, MapPin } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/lampadaire/$deviceId")({
@@ -85,6 +86,48 @@ function LampadaireDetail() {
     refetchInterval: 15000,
   });
 
+  const queryClient = useQueryClient();
+  const [maj, setMaj] = useState(false);
+  const [erreurMaj, setErreurMaj] = useState<string | null>(null);
+
+  const reprendrePosition = () => {
+    if (!data || !navigator.geolocation) return;
+    setMaj(true);
+    setErreurMaj(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(`/api/poteaux/${deviceId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              device_id: deviceId,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              quartier: data.poteau.quartier,
+              commune: data.poteau.commune,
+              zone: data.poteau.zone,
+              type_lampe: data.poteau.type_lampe,
+              puissance_w: data.poteau.puissance_w,
+            }),
+          });
+          if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+          queryClient.invalidateQueries({ queryKey: ["lampadaire-detail", deviceId] });
+        } catch (err: any) {
+          setErreurMaj(err?.message ?? "Echec de la mise a jour");
+        } finally {
+          setMaj(false);
+        }
+      },
+      () => {
+        setErreurMaj("Position GPS indisponible. Verifie l'autorisation de localisation.");
+        setMaj(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  };
+
   const s = styleFor(data?.poteau.dernier_etat ?? null);
 
   return (
@@ -168,6 +211,25 @@ function LampadaireDetail() {
                     : "—"
                 }
               />
+              <div className="pt-2">
+                <button
+                  type="button"
+                  disabled={maj}
+                  onClick={reprendrePosition}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold"
+                  style={{
+                    background: maj ? "rgba(255,255,255,0.06)" : "rgba(251,191,36,0.12)",
+                    color: maj ? "rgba(255,255,255,0.4)" : "#FBBF24",
+                    border: "1px solid rgba(251,191,36,0.3)",
+                  }}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {maj ? "Mise a jour en cours..." : "Reprendre ma position actuelle"}
+                </button>
+                {erreurMaj && (
+                  <p className="mt-1.5 text-[11px]" style={{ color: "#F87171" }}>{erreurMaj}</p>
+                )}
+              </div>
               <InfoRow
                 label="Derniere mesure"
                 value={data.derniere_mesure ? ilYA(data.derniere_mesure.time) : "Aucune donnee"}
