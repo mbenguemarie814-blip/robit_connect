@@ -67,10 +67,26 @@ function masterEnLigne(dateIso: string): boolean {
 
 function formatDureeExacte(ms: number): string {
   const secondesTotales = Math.floor(ms / 1000);
-  const minutes = Math.floor(secondesTotales / 60);
-  const secondes = secondesTotales % 60;
-  if (minutes === 0) return `${secondes}s`;
-  return `${minutes}min ${secondes}s`;
+
+  if (secondesTotales < 60) {
+    return `${secondesTotales}s`;
+  }
+
+  const minutesTotales = Math.floor(secondesTotales / 60);
+  const secondesRestantes = secondesTotales % 60;
+  if (minutesTotales < 60) {
+    return `${minutesTotales}min ${secondesRestantes}s`;
+  }
+
+  const heuresTotales = Math.floor(minutesTotales / 60);
+  const minutesRestantes = minutesTotales % 60;
+  if (heuresTotales < 24) {
+    return `${heuresTotales}h ${minutesRestantes}min`;
+  }
+
+  const joursTotaux = Math.floor(heuresTotales / 24);
+  const heuresRestantes = heuresTotales % 24;
+  return `${joursTotaux}j ${heuresRestantes}h`;
 }
 
 function DiagnosticConnexion({ dateIso }: { dateIso: string }) {
