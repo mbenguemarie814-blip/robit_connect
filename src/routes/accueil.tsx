@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
+  AlertOctagon,
   AlertTriangle,
   ChevronRight,
   Lamp,
@@ -62,7 +63,7 @@ async function fetchDashboardResume(): Promise<DashboardResume> {
   return res.json();
 }
 
-type Gateway = { gateway_id: string };
+type Gateway = { gateway_id: string; time: string };
 
 async function fetchGateways(): Promise<Gateway[]> {
   const res = await fetch("/api/gateways");
@@ -178,6 +179,29 @@ function Accueil() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-72" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,10,10,0.7) 55%, #0A0A0A 100%)" }} />
 
         <div className="relative flex flex-col gap-3 p-4 pt-3">
+
+            {gateways && gateways.some((g) => Date.now() - new Date(g.time).getTime() > 90000) && (
+              <Link
+                to="/master"
+                className="flex items-center gap-3 rounded-2xl p-3.5"
+                style={{
+                  background: "linear-gradient(90deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08))",
+                  border: "1.5px solid rgba(239,68,68,0.5)",
+                  boxShadow: "0 0 20px -4px rgba(239,68,68,0.4)",
+                }}
+              >
+                <AlertOctagon className="h-5 w-5 shrink-0 animate-pulse" style={{ color: "#F87171" }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold" style={{ color: "#F87171" }}>
+                    Alerte critique — Passerelle hors ligne
+                  </span>
+                  <span className="block text-[11px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                    Aucune donnee recue depuis plus de 90 secondes
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "#F87171" }} />
+              </Link>
+            )}
 
           {/* Carte etat du reseau - glassmorphism fonce */}
           <section className="relative overflow-hidden rounded-3xl p-4" style={{

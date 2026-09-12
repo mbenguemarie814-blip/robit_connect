@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Battery, Bolt, Gauge, Zap, RefreshCw, Sun, Moon, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Battery, Bolt, Gauge, Zap, RefreshCw, Sun, Moon, AlertTriangle, Radio, WifiOff } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/master")({
@@ -62,6 +63,65 @@ const SEUIL_HORS_LIGNE_MS = 90000; // 90 secondes
 
 function masterEnLigne(dateIso: string): boolean {
   return Date.now() - new Date(dateIso).getTime() < SEUIL_HORS_LIGNE_MS;
+}
+
+function formatDureeExacte(ms: number): string {
+  const secondesTotales = Math.floor(ms / 1000);
+  const minutes = Math.floor(secondesTotales / 60);
+  const secondes = secondesTotales % 60;
+  if (minutes === 0) return `${secondes}s`;
+  return `${minutes}min ${secondes}s`;
+}
+
+function DiagnosticConnexion({ dateIso }: { dateIso: string }) {
+  const [maintenant, setMaintenant] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setMaintenant(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ecoulementMs = maintenant - new Date(dateIso).getTime();
+  const enLigne = ecoulementMs < SEUIL_HORS_LIGNE_MS;
+  const dateFormatee = new Date(dateIso).toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
+
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-2xl p-3"
+      style={{
+        background: enLigne ? "rgba(74,222,128,0.06)" : "rgba(239,68,68,0.1)",
+        border: enLigne ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(239,68,68,0.4)",
+      }}
+    >
+      <div className="flex items-center gap-2">
+        {enLigne ? (
+          <Radio className="h-4 w-4" style={{ color: "#4ADE80" }} />
+        ) : (
+          <WifiOff className="h-4 w-4" style={{ color: "#F87171" }} />
+        )}
+        <span className="text-xs font-bold" style={{ color: enLigne ? "#4ADE80" : "#F87171" }}>
+          {enLigne ? "En ligne" : "Hors ligne"}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Derniere transmission</span>
+        <span className="text-[11px] font-semibold text-white">{dateFormatee}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Depuis</span>
+        <span className="text-[11px] font-semibold" style={{ color: enLigne ? "#fff" : "#F87171" }}>
+          {formatDureeExacte(ecoulementMs)}
+        </span>
+      </div>
+      {!enLigne && (
+        <span className="text-[10px]" style={{ color: "rgba(248,113,113,0.7)" }}>
+          Seuil hors ligne : 90s sans transmission
+        </span>
+      )}
+    </div>
+  );
 }
 
 function ilYA(dateIso: string): string {
@@ -175,6 +235,8 @@ function MasterListe() {
                   </span>
                 );
               })()}
+
+              <DiagnosticConnexion dateIso={g.time} />
 
               <div className="grid grid-cols-3 gap-2.5">
                 <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={g.voltage} unit="V" />
