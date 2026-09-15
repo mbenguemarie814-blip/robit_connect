@@ -232,20 +232,17 @@ function LampadaireDetail() {
                 }
               />
               <div className="pt-2">
-                <button
-                  type="button"
-                  disabled={maj}
-                  onClick={reprendrePosition}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold"
-                  style={{
-                    background: maj ? "rgba(255,255,255,0.06)" : "rgba(251,191,36,0.12)",
-                    color: maj ? "rgba(255,255,255,0.4)" : "#FBBF24",
-                    border: "1px solid rgba(251,191,36,0.3)",
-                  }}
-                >
-                  <MapPin className="h-3.5 w-3.5" />
-                  {maj ? "Mise a jour en cours..." : "Reprendre ma position actuelle"}
-                </button>
+                {data.poteau.latitude != null && data.poteau.longitude != null && (
+                  <a href={`https://www.google.com/maps/dir/?api=1&destination=${data.poteau.latitude},${data.poteau.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold"
+                    style={{ background: "rgba(251,191,36,0.12)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.3)" }}
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    Itineraire
+                  </a>
+                )}
                 {erreurMaj && (
                   <p className="mt-1.5 text-[11px]" style={{ color: "#F87171" }}>{erreurMaj}</p>
                 )}
