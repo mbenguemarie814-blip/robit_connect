@@ -23,6 +23,7 @@ type DetailResponse = {
     device_id: string;
     quartier: string | null;
     commune: string | null;
+    ville: string | null;
     zone: string | null;
     latitude: number | null;
     longitude: number | null;
@@ -146,6 +147,64 @@ function LampadaireDetail() {
       return;
     }
     mettreAJourPosition(lat, lng);
+  };
+
+  const [formulaireInfos, setFormulaireInfos] = useState(false);
+  const [quartierEdit, setQuartierEdit] = useState("");
+  const [communeEdit, setCommuneEdit] = useState("");
+  const [villeEdit, setVilleEdit] = useState("");
+  const [zoneEdit, setZoneEdit] = useState("");
+  const [typeLampeEdit, setTypeLampeEdit] = useState("");
+  const [puissanceEdit, setPuissanceEdit] = useState("");
+  const [majInfos, setMajInfos] = useState(false);
+  const [erreurInfos, setErreurInfos] = useState<string | null>(null);
+
+  const ouvrirFormulaireInfos = () => {
+    if (!data) return;
+    setQuartierEdit(data.poteau.quartier ?? "");
+    setCommuneEdit(data.poteau.commune ?? "");
+    setVilleEdit(data.poteau.ville ?? "");
+    setZoneEdit(data.poteau.zone ?? "");
+    setTypeLampeEdit(data.poteau.type_lampe ?? "");
+    setPuissanceEdit(data.poteau.puissance_w != null ? String(data.poteau.puissance_w) : "");
+    setErreurInfos(null);
+    setFormulaireInfos(true);
+  };
+
+  const validerInfos = async () => {
+    if (!data) return;
+    const puissance = parseInt(puissanceEdit, 10);
+    if (puissanceEdit && Number.isNaN(puissance)) {
+      setErreurInfos("Puissance invalide.");
+      return;
+    }
+
+    setMajInfos(true);
+    setErreurInfos(null);
+    try {
+      const res = await fetch(`/api/poteaux/${deviceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          device_id: deviceId,
+          latitude: data.poteau.latitude,
+          longitude: data.poteau.longitude,
+          quartier: quartierEdit || null,
+          commune: communeEdit || null,
+          ville: villeEdit || null,
+          zone: zoneEdit || null,
+          type_lampe: typeLampeEdit || null,
+          puissance_w: puissanceEdit ? puissance : null,
+        }),
+      });
+      if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+      queryClient.invalidateQueries({ queryKey: ["lampadaire-detail", deviceId] });
+      setFormulaireInfos(false);
+    } catch (err: any) {
+      setErreurInfos(err?.message ?? "Echec de la mise a jour");
+    } finally {
+      setMajInfos(false);
+    }
   };
 
   const s = styleFor(data?.poteau.dernier_etat ?? null);
@@ -302,6 +361,92 @@ function LampadaireDetail() {
                 value={data.derniere_mesure ? ilYA(data.derniere_mesure.time) : "Aucune donnee"}
                 last
               />
+
+              <button
+                type="button"
+                onClick={ouvrirFormulaireInfos}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold"
+                style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}
+              >
+                Modifier les informations
+              </button>
+
+              {formulaireInfos && (
+                <div className="mt-2 flex flex-col gap-2 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Quartier</span>
+                    <input
+                      value={quartierEdit}
+                      onChange={(e) => setQuartierEdit(e.target.value)}
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Commune</span>
+                    <input
+                      value={communeEdit}
+                      onChange={(e) => setCommuneEdit(e.target.value)}
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Ville</span>
+                    <input
+                      value={villeEdit}
+                      onChange={(e) => setVilleEdit(e.target.value)}
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Zone</span>
+                    <input
+                      value={zoneEdit}
+                      onChange={(e) => setZoneEdit(e.target.value)}
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Type de lampe</span>
+                    <input
+                      value={typeLampeEdit}
+                      onChange={(e) => setTypeLampeEdit(e.target.value)}
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Puissance (W)</span>
+                    <input
+                      value={puissanceEdit}
+                      onChange={(e) => setPuissanceEdit(e.target.value)}
+                      type="number"
+                      className="rounded-lg px-3 py-2 text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
+                    />
+                  </label>
+
+                  {erreurInfos && (
+                    <p className="text-[11px]" style={{ color: "#F87171" }}>{erreurInfos}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={majInfos}
+                    onClick={validerInfos}
+                    className="mt-1 rounded-lg py-2 text-xs font-semibold"
+                    style={{
+                      background: majInfos ? "rgba(255,255,255,0.06)" : "linear-gradient(90deg, #22C55E, #15803D)",
+                      color: majInfos ? "rgba(255,255,255,0.4)" : "#fff",
+                    }}
+                  >
+                    {majInfos ? "Enregistrement..." : "Valider les informations"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {data.alerte_active ? (
