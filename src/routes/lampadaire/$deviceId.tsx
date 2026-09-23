@@ -325,7 +325,7 @@ function LampadaireDetail() {
               </p>
             </div>
 
-            <DiagnosticConnexionPoteau derniereMaj={data.poteau.derniere_maj} />
+            <DiagnosticConnexionPoteau derniereMaj={data.derniere_mesure?.time ?? null} />
 
             {data.poteau.dernier_etat === "OFFLINE" ? (
               <div
