@@ -27,10 +27,9 @@ const CATEGORIES = [
   { value: "tous", label: "Tous les etats" },
   { value: "allume", label: "Allume" },
   { value: "eteint_normal", label: "Eteint (normal)" },
+  { value: "coupure", label: "Coupure" },
   { value: "panne", label: "En panne" },
   { value: "anomalie", label: "Anomalie" },
-  { value: "hors_ligne", label: "Hors ligne" },
-  { value: "master_hors_ligne", label: "Master hors ligne" },
 ];
 
 type GroupDef = { value: string; label: string; color: string; glow: string; etats: string[] };
@@ -38,10 +37,9 @@ type GroupDef = { value: string; label: string; color: string; glow: string; eta
 const GROUPES: GroupDef[] = [
   { value: "allume", label: "Allume", color: "#4ADE80", glow: "rgba(74,222,128,0.45)", etats: ["ALLUME"] },
   { value: "eteint_normal", label: "Eteint (normal)", color: "#9CA3AF", glow: "rgba(156,163,175,0.35)", etats: ["JOUR_NORMAL", "ETEINT_VOLONTAIREMENT"] },
-  { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["PANNE_ALIMENTATION", "SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE", "PANNE_ELECTRIQUE", "CAPTEUR_EN_PANNE"] },
+  { value: "coupure", label: "Coupure", color: "#FB923C", glow: "rgba(251,146,60,0.45)", etats: ["PANNE_ALIMENTATION"] },
+  { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE", "PANNE_ELECTRIQUE", "CAPTEUR_EN_PANNE"] },
   { value: "anomalie", label: "Anomalie", color: "#FBBF24", glow: "rgba(251,191,36,0.45)", etats: ["SURCONSOMMATION", "ETEINT_NUIT", "ALLUME_DE_JOUR", "DEFAUT_INTERMITTENT", "DEGRADATION"] },
-  { value: "hors_ligne", label: "Hors ligne", color: "#6B7280", glow: "rgba(107,114,128,0.4)", etats: ["OFFLINE"] },
-  { value: "master_hors_ligne", label: "Master hors ligne", color: "#60A5FA", glow: "rgba(96,165,250,0.45)", etats: ["MASTER_HORS_LIGNE"] },
 ];
 
 const ETAT_LABEL: Record<string, string> = {
