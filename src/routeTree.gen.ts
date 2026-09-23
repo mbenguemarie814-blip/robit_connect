@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccueilRouteImport } from './routes/accueil'
 import { Route as CarteRouteImport } from './routes/carte'
+import { Route as EtatModuleRouteImport } from './routes/etat-module'
 import { Route as InfosRouteImport } from './routes/infos'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as MasterRouteImport } from './routes/master'
@@ -32,6 +33,11 @@ const AccueilRoute = AccueilRouteImport.update({
 const CarteRoute = CarteRouteImport.update({
   id: '/carte',
   path: '/carte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EtatModuleRoute = EtatModuleRouteImport.update({
+  id: '/etat-module',
+  path: '/etat-module',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InfosRoute = InfosRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accueil': typeof AccueilRoute
   '/carte': typeof CarteRoute
+  '/etat-module': typeof EtatModuleRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/master': typeof MasterRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accueil': typeof AccueilRoute
   '/carte': typeof CarteRoute
+  '/etat-module': typeof EtatModuleRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/master': typeof MasterRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/accueil': typeof AccueilRoute
   '/carte': typeof CarteRoute
+  '/etat-module': typeof EtatModuleRoute
   '/infos': typeof InfosRoute
   '/maintenance': typeof MaintenanceRoute
   '/master': typeof MasterRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accueil'
     | '/carte'
+    | '/etat-module'
     | '/infos'
     | '/maintenance'
     | '/master'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accueil'
     | '/carte'
+    | '/etat-module'
     | '/infos'
     | '/maintenance'
     | '/master'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accueil'
     | '/carte'
+    | '/etat-module'
     | '/infos'
     | '/maintenance'
     | '/master'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccueilRoute: typeof AccueilRoute
   CarteRoute: typeof CarteRoute
+  EtatModuleRoute: typeof EtatModuleRoute
   InfosRoute: typeof InfosRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MasterRoute: typeof MasterRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/carte'
       fullPath: '/carte'
       preLoaderRoute: typeof CarteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/etat-module': {
+      id: '/etat-module'
+      path: '/etat-module'
+      fullPath: '/etat-module'
+      preLoaderRoute: typeof EtatModuleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/infos': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccueilRoute: AccueilRoute,
   CarteRoute: CarteRoute,
+  EtatModuleRoute: EtatModuleRoute,
   InfosRoute: InfosRoute,
   MaintenanceRoute: MaintenanceRoute,
   MasterRoute: MasterRoute,

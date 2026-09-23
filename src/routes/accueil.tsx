@@ -250,7 +250,7 @@ function Accueil() {
                 <span className="font-display text-xs font-bold">Scanner</span>
               </span>
             </Link>
-            <SideAction icon={<Wrench className="h-5 w-5" />} label="Maintenance" />
+            <SideAction icon={<Wrench className="h-5 w-5" />} label="Etat Module" to="/etat-module" />
           </section>
 
           {/* KPI neon */}
