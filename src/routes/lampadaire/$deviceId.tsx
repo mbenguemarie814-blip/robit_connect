@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Bolt, Gauge, Zap, Activity, CheckCircle2, AlertTriangle, MapPin } from "lucide-react";
+import { ArrowLeft, Bolt, Gauge, Zap, Activity, CheckCircle2, AlertTriangle, MapPin, Radio, WifiOff } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/lampadaire/$deviceId")({
@@ -54,7 +54,11 @@ const ETAT_STYLE: Record<string, { color: string; dark: string; label: string; s
   ALLUME_DE_JOUR: { color: "#FBBF24", dark: "#B45309", label: "Allumee le jour", sous: "Gaspillage energetique" },
   DEFAUT_INTERMITTENT: { color: "#FBBF24", dark: "#B45309", label: "Defaut intermittent", sous: "Instabilite detectee" },
   DEGRADATION: { color: "#FBBF24", dark: "#B45309", label: "Degradation", sous: "Derive progressive" },
+  ETEINT_VOLONTAIREMENT: { color: "#9CA3AF", dark: "#4B5563", label: "Eteint volontairement", sous: "Commande a distance" },
+  PANNE_ELECTRIQUE: { color: "#F87171", dark: "#B91C1C", label: "Panne electrique", sous: "Relais actif mais pas de courant" },
+  CAPTEUR_EN_PANNE: { color: "#F87171", dark: "#B91C1C", label: "Capteur en panne", sous: "Le module PZEM ne repond plus" },
   OFFLINE: { color: "#9CA3AF", dark: "#4B5563", label: "Hors ligne", sous: "Aucune donnee recente" },
+  MASTER_HORS_LIGNE: { color: "#60A5FA", dark: "#1D4ED8", label: "Master hors ligne", sous: "La passerelle ne repond plus - etat du poteau inconnu" },
 };
 
 function styleFor(etat: string | null) {
@@ -75,6 +79,70 @@ function ilYA(dateIso: string): string {
   if (minutes < 60) return `il y a ${minutes} min`;
   const heures = Math.round(minutes / 60);
   return `il y a ${heures} h`;
+}
+
+const POTEAU_OFFLINE_MS = 30000; // coherent avec T_OFFLINE_SECONDS cote backend (30s)
+
+function formatDureeExacte(ms: number): string {
+  const secondesTotales = Math.floor(ms / 1000);
+  if (secondesTotales < 60) return `${secondesTotales}s`;
+  const minutesTotales = Math.floor(secondesTotales / 60);
+  const secondesRestantes = secondesTotales % 60;
+  if (minutesTotales < 60) return `${minutesTotales}min ${secondesRestantes}s`;
+  const heuresTotales = Math.floor(minutesTotales / 60);
+  const minutesRestantes = minutesTotales % 60;
+  if (heuresTotales < 24) return `${heuresTotales}h ${minutesRestantes}min`;
+  const joursTotaux = Math.floor(heuresTotales / 24);
+  const heuresRestantes = heuresTotales % 24;
+  return `${joursTotaux}j ${heuresRestantes}h`;
+}
+
+function DiagnosticConnexionPoteau({ derniereMaj }: { derniereMaj: string | null }) {
+  const [maintenant, setMaintenant] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setMaintenant(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!derniereMaj) return null;
+
+  const ecoulementMs = maintenant - new Date(derniereMaj).getTime();
+  const enLigne = ecoulementMs < POTEAU_OFFLINE_MS;
+  const dateFormatee = new Date(derniereMaj).toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
+
+  return (
+    <div
+      className="mb-4 flex flex-col gap-2 rounded-2xl p-3"
+      style={{
+        background: enLigne ? "rgba(74,222,128,0.06)" : "rgba(239,68,68,0.1)",
+        border: enLigne ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(239,68,68,0.4)",
+      }}
+    >
+      <div className="flex items-center gap-2">
+        {enLigne ? (
+          <Radio className="h-4 w-4" style={{ color: "#4ADE80" }} />
+        ) : (
+          <WifiOff className="h-4 w-4" style={{ color: "#F87171" }} />
+        )}
+        <span className="text-xs font-bold" style={{ color: enLigne ? "#4ADE80" : "#F87171" }}>
+          {enLigne ? "Module en ligne" : "Module hors ligne"}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Derniere donnee recue</span>
+        <span className="text-[11px] font-semibold text-white">{dateFormatee}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Depuis</span>
+        <span className="text-[11px] font-semibold" style={{ color: enLigne ? "#fff" : "#F87171" }}>
+          {formatDureeExacte(ecoulementMs)}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function LampadaireDetail() {
@@ -256,6 +324,8 @@ function LampadaireDetail() {
                 {s.sous}
               </p>
             </div>
+
+            <DiagnosticConnexionPoteau derniereMaj={data.poteau.derniere_maj} />
 
             {data.poteau.dernier_etat === "OFFLINE" ? (
               <div

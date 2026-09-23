@@ -35,16 +35,20 @@ const DAKAR_CENTER: [number, number] = [14.6937, -17.4441];
 const ETAT_STYLE: Record<string, { color: string; dark: string; label: string }> = {
   ALLUME: { color: "#4ADE80", dark: "#16A34A", label: "Allume" },
   JOUR_NORMAL: { color: "#9CA3AF", dark: "#4B5563", label: "Eteint normal" },
+  ETEINT_VOLONTAIREMENT: { color: "#9CA3AF", dark: "#4B5563", label: "Eteint volontairement" },
   PANNE_ALIMENTATION: { color: "#F87171", dark: "#B91C1C", label: "Panne" },
   SOUS_TENSION: { color: "#F87171", dark: "#B91C1C", label: "Panne" },
   SURTENSION: { color: "#F87171", dark: "#B91C1C", label: "Panne" },
   LAMPE_POTENTIELLEMENT_GRILLEE: { color: "#F87171", dark: "#B91C1C", label: "Panne" },
+  PANNE_ELECTRIQUE: { color: "#F87171", dark: "#B91C1C", label: "Panne electrique" },
+  CAPTEUR_EN_PANNE: { color: "#F87171", dark: "#B91C1C", label: "Capteur en panne" },
   SURCONSOMMATION: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   ETEINT_NUIT: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   ALLUME_DE_JOUR: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   DEFAUT_INTERMITTENT: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   DEGRADATION: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   OFFLINE: { color: "#6B7280", dark: "#374151", label: "Hors ligne" },
+  MASTER_HORS_LIGNE: { color: "#60A5FA", dark: "#1D4ED8", label: "Master hors ligne" },
 };
 
 function styleFor(etat: string | null) {

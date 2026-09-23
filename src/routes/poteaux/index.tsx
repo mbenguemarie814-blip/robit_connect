@@ -30,31 +30,37 @@ const CATEGORIES = [
   { value: "panne", label: "En panne" },
   { value: "anomalie", label: "Anomalie" },
   { value: "hors_ligne", label: "Hors ligne" },
+  { value: "master_hors_ligne", label: "Master hors ligne" },
 ];
 
 type GroupDef = { value: string; label: string; color: string; glow: string; etats: string[] };
 
 const GROUPES: GroupDef[] = [
   { value: "allume", label: "Allume", color: "#4ADE80", glow: "rgba(74,222,128,0.45)", etats: ["ALLUME"] },
-  { value: "eteint_normal", label: "Eteint (normal)", color: "#9CA3AF", glow: "rgba(156,163,175,0.35)", etats: ["JOUR_NORMAL"] },
-  { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["PANNE_ALIMENTATION", "SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE"] },
+  { value: "eteint_normal", label: "Eteint (normal)", color: "#9CA3AF", glow: "rgba(156,163,175,0.35)", etats: ["JOUR_NORMAL", "ETEINT_VOLONTAIREMENT"] },
+  { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["PANNE_ALIMENTATION", "SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE", "PANNE_ELECTRIQUE", "CAPTEUR_EN_PANNE"] },
   { value: "anomalie", label: "Anomalie", color: "#FBBF24", glow: "rgba(251,191,36,0.45)", etats: ["SURCONSOMMATION", "ETEINT_NUIT", "ALLUME_DE_JOUR", "DEFAUT_INTERMITTENT", "DEGRADATION"] },
   { value: "hors_ligne", label: "Hors ligne", color: "#6B7280", glow: "rgba(107,114,128,0.4)", etats: ["OFFLINE"] },
+  { value: "master_hors_ligne", label: "Master hors ligne", color: "#60A5FA", glow: "rgba(96,165,250,0.45)", etats: ["MASTER_HORS_LIGNE"] },
 ];
 
 const ETAT_LABEL: Record<string, string> = {
   ALLUME: "Allume",
   JOUR_NORMAL: "Eteint (normal)",
+  ETEINT_VOLONTAIREMENT: "Eteint volontairement",
   PANNE_ALIMENTATION: "Panne alimentation",
   SOUS_TENSION: "Sous-tension",
   SURTENSION: "Surtension",
   LAMPE_POTENTIELLEMENT_GRILLEE: "Lampe grillee",
+  PANNE_ELECTRIQUE: "Panne electrique",
+  CAPTEUR_EN_PANNE: "Capteur en panne",
   SURCONSOMMATION: "Surconsommation",
   ETEINT_NUIT: "Eteinte la nuit",
   ALLUME_DE_JOUR: "Allumee le jour",
   DEFAUT_INTERMITTENT: "Defaut intermittent",
   DEGRADATION: "Degradation",
   OFFLINE: "Hors ligne",
+  MASTER_HORS_LIGNE: "Master hors ligne",
 };
 
 function groupeFor(etat: string | null): GroupDef | undefined {
