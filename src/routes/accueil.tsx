@@ -218,7 +218,7 @@ function Accueil() {
                 <p className="text-[11px] tracking-widest uppercase" style={{ color: "rgba(245,230,200,0.5)" }}>
                   Parc supervisé
                 </p>
-                <p className="truncate font-display text-2xl font-bold text-white">Zone Plateau</p>
+                <p className="truncate font-display text-2xl font-bold text-white">Dakar</p>
               </div>
               <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold" style={{ color: "#4ADE80" }}>
                 <Radio className="h-3.5 w-3.5" /> Connecté
