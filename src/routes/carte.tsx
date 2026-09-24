@@ -49,6 +49,8 @@ const ETAT_STYLE: Record<string, { color: string; dark: string; label: string }>
   DEGRADATION: { color: "#FBBF24", dark: "#B45309", label: "Anomalie" },
   OFFLINE: { color: "#6B7280", dark: "#374151", label: "Hors ligne" },
   MASTER_HORS_LIGNE: { color: "#60A5FA", dark: "#1D4ED8", label: "Master hors ligne" },
+  ALLUME_JOUR_MANUEL: { color: "#60A5FA", dark: "#1D4ED8", label: "Intervention" },
+  ETEINT_NUIT_MANUEL: { color: "#60A5FA", dark: "#1D4ED8", label: "Intervention" },
 };
 
 function styleFor(etat: string | null) {

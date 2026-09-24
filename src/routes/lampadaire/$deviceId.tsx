@@ -59,6 +59,8 @@ const ETAT_STYLE: Record<string, { color: string; dark: string; label: string; s
   CAPTEUR_EN_PANNE: { color: "#F87171", dark: "#B91C1C", label: "Capteur en panne", sous: "Le module PZEM ne repond plus" },
   OFFLINE: { color: "#9CA3AF", dark: "#4B5563", label: "Hors ligne", sous: "Aucune donnee recente" },
   MASTER_HORS_LIGNE: { color: "#60A5FA", dark: "#1D4ED8", label: "Master hors ligne", sous: "La passerelle ne repond plus - etat du poteau inconnu" },
+  ALLUME_JOUR_MANUEL: { color: "#60A5FA", dark: "#1D4ED8", label: "Intervention en cours", sous: "Allumee manuellement en journee" },
+  ETEINT_NUIT_MANUEL: { color: "#60A5FA", dark: "#1D4ED8", label: "Intervention en cours", sous: "Eteinte manuellement la nuit" },
 };
 
 function styleFor(etat: string | null) {

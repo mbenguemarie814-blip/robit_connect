@@ -30,6 +30,7 @@ const CATEGORIES = [
   { value: "coupure", label: "Coupure" },
   { value: "panne", label: "En panne" },
   { value: "anomalie", label: "Anomalie" },
+  { value: "intervention", label: "Intervention" },
 ];
 
 type GroupDef = { value: string; label: string; color: string; glow: string; etats: string[] };
@@ -40,12 +41,15 @@ const GROUPES: GroupDef[] = [
   { value: "coupure", label: "Coupure", color: "#FB923C", glow: "rgba(251,146,60,0.45)", etats: ["PANNE_ALIMENTATION", "OFFLINE"] },
   { value: "panne", label: "En panne", color: "#F87171", glow: "rgba(248,113,113,0.45)", etats: ["SOUS_TENSION", "SURTENSION", "LAMPE_POTENTIELLEMENT_GRILLEE", "PANNE_ELECTRIQUE", "CAPTEUR_EN_PANNE"] },
   { value: "anomalie", label: "Anomalie", color: "#FBBF24", glow: "rgba(251,191,36,0.45)", etats: ["SURCONSOMMATION", "ETEINT_NUIT", "ALLUME_DE_JOUR", "DEFAUT_INTERMITTENT", "DEGRADATION"] },
+  { value: "intervention", label: "Intervention", color: "#60A5FA", glow: "rgba(96,165,250,0.45)", etats: ["ALLUME_JOUR_MANUEL", "ETEINT_NUIT_MANUEL"] },
 ];
 
 const ETAT_LABEL: Record<string, string> = {
   ALLUME: "Allume",
   JOUR_NORMAL: "Eteint (normal)",
   ETEINT_VOLONTAIREMENT: "Eteint volontairement",
+  ALLUME_JOUR_MANUEL: "Allumee le jour (intervention)",
+  ETEINT_NUIT_MANUEL: "Eteinte la nuit (intervention)",
   PANNE_ALIMENTATION: "Panne alimentation",
   SOUS_TENSION: "Sous-tension",
   SURTENSION: "Surtension",

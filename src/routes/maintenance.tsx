@@ -56,10 +56,12 @@ const ANOMALIE_LABEL: Record<string, string> = {
   DEFAUT_INTERMITTENT: "Defaut intermittent",
   DEGRADATION: "Degradation",
   OFFLINE: "Hors ligne",
+  ALLUME_JOUR_MANUEL: "Allumee le jour (intervention)",
+  ETEINT_NUIT_MANUEL: "Eteinte la nuit (intervention)",
 };
 
 // Point 1 : niveau d'urgence par type d'anomalie (remplace le texte brut "Verifier communication" etc.)
-const NIVEAU_PAR_ANOMALIE: Record<string, "Urgent" | "Critique" | "Grave" | "Normal"> = {
+const NIVEAU_PAR_ANOMALIE: Record<string, "Urgent" | "Critique" | "Grave" | "Normal" | "Intervention"> = {
   PANNE_ALIMENTATION: "Urgent",
   SOUS_TENSION: "Urgent",
   SURTENSION: "Urgent",
@@ -70,6 +72,8 @@ const NIVEAU_PAR_ANOMALIE: Record<string, "Urgent" | "Critique" | "Grave" | "Nor
   ALLUME_DE_JOUR: "Normal",
   DEFAUT_INTERMITTENT: "Normal",
   OFFLINE: "Normal", // cas special, voir point 5
+  ALLUME_JOUR_MANUEL: "Intervention",
+  ETEINT_NUIT_MANUEL: "Intervention",
 };
 
 const NIVEAU_STYLE: Record<string, string> = {
@@ -77,6 +81,7 @@ const NIVEAU_STYLE: Record<string, string> = {
   Critique: "#F97316",
   Grave: "#FBBF24",
   Normal: "#9CA3AF",
+  Intervention: "#60A5FA",
 };
 
 function niveauFor(type: string) {
