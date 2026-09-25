@@ -191,7 +191,7 @@ function PoteauxListe() {
   const { data: poteaux, isLoading } = useQuery({
     queryKey: ["poteaux", categorie],
     queryFn: () => fetchPoteaux(categorie),
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 
   return (
