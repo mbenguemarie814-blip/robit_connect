@@ -99,7 +99,7 @@ function formatDureeExacte(ms: number): string {
   return `${joursTotaux}j ${heuresRestantes}h`;
 }
 
-function DiagnosticConnexionPoteau({ derniereMaj }: { derniereMaj: string | null }) {
+function EtatLampeDepuis({ label, color, debut }: { label: string; color: string; debut: string | null }) {
   const [maintenant, setMaintenant] = useState(() => Date.now());
 
   useEffect(() => {
@@ -107,39 +107,32 @@ function DiagnosticConnexionPoteau({ derniereMaj }: { derniereMaj: string | null
     return () => clearInterval(interval);
   }, []);
 
-  if (!derniereMaj) return null;
+  if (!debut) {
+    return (
+      <div
+        className="mb-4 flex items-center gap-2 rounded-2xl p-3"
+        style={{ background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.2)" }}
+      >
+        <Radio className="h-4 w-4" style={{ color: "#4ADE80" }} />
+        <span className="text-xs font-bold" style={{ color: "#4ADE80" }}>Fonctionnement normal</span>
+      </div>
+    );
+  }
 
-  const ecoulementMs = maintenant - new Date(derniereMaj).getTime();
-  const enLigne = ecoulementMs < POTEAU_OFFLINE_MS;
-  const dateFormatee = new Date(derniereMaj).toLocaleString("fr-FR", {
-    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
+  const ecoulementMs = maintenant - new Date(debut).getTime();
 
   return (
     <div
       className="mb-4 flex flex-col gap-2 rounded-2xl p-3"
-      style={{
-        background: enLigne ? "rgba(74,222,128,0.06)" : "rgba(239,68,68,0.1)",
-        border: enLigne ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(239,68,68,0.4)",
-      }}
+      style={{ background: `${color}0F`, border: `1px solid ${color}40` }}
     >
       <div className="flex items-center gap-2">
-        {enLigne ? (
-          <Radio className="h-4 w-4" style={{ color: "#4ADE80" }} />
-        ) : (
-          <WifiOff className="h-4 w-4" style={{ color: "#F87171" }} />
-        )}
-        <span className="text-xs font-bold" style={{ color: enLigne ? "#4ADE80" : "#F87171" }}>
-          {enLigne ? "Module en ligne" : "Module hors ligne"}
-        </span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Derniere donnee recue</span>
-        <span className="text-[11px] font-semibold text-white">{dateFormatee}</span>
+        <WifiOff className="h-4 w-4" style={{ color }} />
+        <span className="text-xs font-bold" style={{ color }}>Lampe {label}</span>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>Depuis</span>
-        <span className="text-[11px] font-semibold" style={{ color: enLigne ? "#fff" : "#F87171" }}>
+        <span className="text-[11px] font-semibold" style={{ color }}>
           {formatDureeExacte(ecoulementMs)}
         </span>
       </div>
@@ -349,7 +342,7 @@ function LampadaireDetail() {
               </p>
             </div>
 
-            <DiagnosticConnexionPoteau derniereMaj={data.derniere_mesure?.time ?? null} />
+            <EtatLampeDepuis label={s.label.toLowerCase()} color={s.color} debut={data.alerte_active?.debut ?? null} />
 
             {data.poteau.dernier_etat === "OFFLINE" ? (
               <div
