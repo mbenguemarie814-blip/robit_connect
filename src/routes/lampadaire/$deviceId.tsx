@@ -158,6 +158,28 @@ function LampadaireDetail() {
   });
 
   const queryClient = useQueryClient();
+  const [envoiCommande, setEnvoiCommande] = useState<string | null>(null);
+  const [erreurCommande, setErreurCommande] = useState<string | null>(null);
+
+  const envoyerCommande = async (relais: "ON" | "OFF") => {
+    setEnvoiCommande(relais);
+    setErreurCommande(null);
+    try {
+      const res = await fetch(`/api/poteaux/${deviceId}/commande`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ relais }),
+      });
+      if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["lampadaire-detail", deviceId] });
+      }, 3000);
+    } catch (err: any) {
+      setErreurCommande(err?.message ?? "Echec de l'envoi de la commande");
+    } finally {
+      setEnvoiCommande(null);
+    }
+  };
   const [maj, setMaj] = useState(false);
   const [erreurMaj, setErreurMaj] = useState<string | null>(null);
 
@@ -363,6 +385,37 @@ function LampadaireDetail() {
                 }
               />
               <div className="pt-2">
+                <div className="mb-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={envoiCommande !== null}
+                    onClick={() => envoyerCommande("ON")}
+                    className="rounded-xl py-2.5 text-xs font-semibold"
+                    style={{
+                      background: envoiCommande === "ON" ? "rgba(255,255,255,0.06)" : "linear-gradient(90deg, #22C55E, #15803D)",
+                      color: envoiCommande === "ON" ? "rgba(255,255,255,0.4)" : "#fff",
+                    }}
+                  >
+                    {envoiCommande === "ON" ? "Envoi..." : "Allumer"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={envoiCommande !== null}
+                    onClick={() => envoyerCommande("OFF")}
+                    className="rounded-xl py-2.5 text-xs font-semibold"
+                    style={{
+                      background: envoiCommande === "OFF" ? "rgba(255,255,255,0.06)" : "rgba(239,68,68,0.15)",
+                      color: envoiCommande === "OFF" ? "rgba(255,255,255,0.4)" : "#F87171",
+                      border: "1px solid rgba(239,68,68,0.3)",
+                    }}
+                  >
+                    {envoiCommande === "OFF" ? "Envoi..." : "Eteindre"}
+                  </button>
+                </div>
+                {erreurCommande && (
+                  <p className="mb-2 text-[11px]" style={{ color: "#F87171" }}>{erreurCommande}</p>
+                )}
+
                 {data.poteau.latitude != null && data.poteau.longitude != null && (
                   <a href={`https://www.google.com/maps/dir/?api=1&destination=${data.poteau.latitude},${data.poteau.longitude}`}
                     target="_blank"
