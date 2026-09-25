@@ -154,7 +154,7 @@ function LampadaireDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["lampadaire-detail", deviceId],
     queryFn: () => fetchDetail(deviceId),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   });
 
   const queryClient = useQueryClient();
