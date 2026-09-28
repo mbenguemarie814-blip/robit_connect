@@ -140,6 +140,43 @@ function EtatLampeDepuis({ label, color, debut }: { label: string; color: string
   );
 }
 
+const MESURE_PERIMEE_MS = 30000; // au-dela, la mesure ne reflete plus l'etat actuel
+
+function BlocMesures({ mesure }: { mesure: DetailResponse["derniere_mesure"] }) {
+  const [maintenant, setMaintenant] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setMaintenant(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ageMs = mesure ? maintenant - new Date(mesure.time).getTime() : null;
+  const perimee = ageMs != null && ageMs > MESURE_PERIMEE_MS;
+  const styleCarte = { opacity: perimee ? 0.35 : 1 };
+
+  return (
+    <>
+      {perimee && ageMs != null && (
+        <p className="col-span-2 text-[11px]" style={{ color: "rgba(255,255,255,0.5)" }}>
+          Derniere mesure valide il y a {formatDureeExacte(ageMs)} - elle ne reflete plus l'etat actuel
+        </p>
+      )}
+      <div style={styleCarte}>
+        <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={mesure?.voltage} unit="V" />
+      </div>
+      <div style={styleCarte}>
+        <Mesure icon={<Activity className="h-4 w-4" />} label="Courant" value={mesure?.current} unit="A" decimals={2} />
+      </div>
+      <div style={styleCarte}>
+        <Mesure icon={<Gauge className="h-4 w-4" />} label="Puissance" value={mesure?.power} unit="W" />
+      </div>
+      <div style={styleCarte}>
+        <Mesure icon={<Activity className="h-4 w-4" />} label="Frequence" value={mesure?.frequency} unit="Hz" />
+      </div>
+    </>
+  );
+}
+
 function LampadaireDetail() {
   const { deviceId } = Route.useParams();
   const navigate = useNavigate();
@@ -355,10 +392,7 @@ function LampadaireDetail() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2.5">
-                <Mesure icon={<Bolt className="h-4 w-4" />} label="Tension" value={data.derniere_mesure?.voltage} unit="V" />
-                <Mesure icon={<Activity className="h-4 w-4" />} label="Courant" value={data.derniere_mesure?.current} unit="A" decimals={2} />
-                <Mesure icon={<Gauge className="h-4 w-4" />} label="Puissance" value={data.derniere_mesure?.power} unit="W" />
-                <Mesure icon={<Activity className="h-4 w-4" />} label="Frequence" value={data.derniere_mesure?.frequency} unit="Hz" />
+                <BlocMesures mesure={data.derniere_mesure} />
               </div>
             )}
 
